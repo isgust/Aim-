@@ -1,0 +1,512 @@
+{
+  "jogadores": {
+    "454413505014136846": {
+      "id": "454413505014136846",
+      "nome": "Kazui",
+      "classe": "Wicca",
+      "nivel": 5,
+      "hp": 200,
+      "hpMax": 200,
+      "mana": 105,
+      "manaMax": 110,
+      "ouro": 177,
+      "xp": 72,
+      "xpProximoNivel": 505,
+      "inventario": [
+        "Mochila de Aventureiro",
+        "Amuleto da Guarda Real",
+        "Escama Brilhante de Dragão",
+        "Buquê de Rosas Cinzentas",
+        "Essência da Cinza Eterna",
+        "Esporo Luminescente Raro",
+        "Fragmento de Cristal Etéreo",
+        "Cálice de Obsidiana Sangrenta",
+        "Rosa Sombria do Crepúsculo"
+      ],
+      "habilidades": [
+        "Ritual das Cinzas Sagradas",
+        "Troca Equivalente Ancestral",
+        "Canalização Lunar",
+        "Maldição dos Sete Ventos"
+      ],
+      "atributosExtras": {},
+      "criadoEm": "2026-09-19T22:43:36.552Z"
+    },
+    "441294300056387605": {
+      "id": "441294300056387605",
+      "nome": "Lirian Deepeko",
+      "classe": "bardo",
+      "nivel": 1,
+      "hp": 100,
+      "hpMax": 100,
+      "mana": 50,
+      "manaMax": 50,
+      "ouro": 25,
+      "xp": 0,
+      "xpProximoNivel": 100,
+      "habilidades": [
+        "Ataque Básico Aprimorado",
+        "Foco de Combate",
+        "Instinto de Sobrevivência"
+      ],
+      "atributosExtras": {},
+      "inventario": [
+        "Poção de Cura Menor",
+        "Mochila de Aventureiro"
+      ],
+      "localizacao": "Aethelgard (Capital)",
+      "criadoEm": "2026-09-20T03:07:53.353Z"
+    },
+    "1550999849602781224": {
+      "id": "1550999849602781224",
+      "nome": "Aimê",
+      "classe": "Feiticeira Arcana",
+      "nivel": 3,
+      "hp": 160,
+      "hpMax": 160,
+      "mana": 140,
+      "manaMax": 140,
+      "ouro": 95,
+      "xp": 180,
+      "xpProximoNivel": 300,
+      "inventario": [
+        "Grimório Sussurrante",
+        "Adaga de Prata Encantada",
+        "Poção de Mana Média",
+        "Cristal de Fogo Fátuo"
+      ],
+      "habilidades": [
+        "Rajada de Sombras",
+        "Teleporte Etéreo",
+        "Encantamento Hipnótico"
+      ],
+      "localizacao": "Aethelgard (Capital)",
+      "atributosExtras": {},
+      "criadoEm": "2026-09-20T21:00:00.000Z"
+    }
+  },
+  "sistemasDinamicos": {
+    "craft": {
+      "nome": "craft",
+      "descricao": "Forja, alquimia e combinação mágica de itens do inventário",
+      "sintaxe": "!craft <Item 1> + <Item 2>",
+      "categoria": "mecânica",
+      "regras": "Consome os itens indicados do inventário se a combinação for mística ou lógica no RPG. Rola d20 para pureza da forja. Gera um novo item com propriedades mágicas e imagem ilustrativa.",
+      "criadoPor": "gutsrocha",
+      "criadoEm": "19/09/2026"
+    }
+  },
+  "monstroAtual": null,
+  "cenarioAtual": {
+    "nome": "Santuário do Juramento Sombrio",
+    "descricao": "Uma câmara subterrânea circular cercada por colunas de basalto negro, onde o ar é rarefeito e o eco de sussurros antigos preenche o espaço."
+  },
+  "aprendizados": [
+    {
+      "id": 1,
+      "autor": "gutsrocha",
+      "data": "19/09/2026, 19:47:58",
+      "sugestao": "o jogo tem que ter algum nerf pra todo mundo n conseguir o que quiser e um esquema especifico pra gerar pontuação aleatoria e o mundo tem que ter uma lore segundo o que os jogadores fazem e o bot n pode esquecer essa memoria, pois cada detalhe pode ser importante futuramente, n pode ter furo de roteiro",
+      "regraIA": "Implementar escassez e nerfs para evitar que jogadores consigam tudo facilmente, gerar pontuações de forma estritamente aleatória, e manter uma memória persistente e imaculada da lore moldada pelas ações dos jogadores para garantir consistência e evitar furos de roteiro.",
+      "categoria": "mecânica"
+    },
+    {
+      "id": 2,
+      "autor": "gutsrocha",
+      "data": "19/09/2026, 22:17:34",
+      "sugestao": "Quero imagens ilustrativas das situações",
+      "regraIA": "Sempre que descrever uma situação de exploração, combate ou cena dramática, devo gerar e enviar imagens ilustrativas geradas por IA para imergir visualmente os jogadores.",
+      "categoria": "servidor"
+    },
+    {
+      "id": 3,
+      "autor": "gutsrocha",
+      "data": "19/09/2026, 22:18:44",
+      "sugestao": "Você não deve aceitar todas sugestões",
+      "regraIA": "O Mestre de RPG (IA) não deve aceitar todas as sugestões cegamente, mantendo o senso crítico, a dificuldade e o equilíbrio do jogo.",
+      "categoria": "servidor"
+    },
+    {
+      "id": 4,
+      "autor": "gutsrocha",
+      "data": "19/09/2026, 22:54:28",
+      "sugestao": "Adicionar comando de craft com o que os itens que os aventureiros tem no inventário. Exibir habilidades/magias/poderes em !status também",
+      "regraIA": "O sistema de RPG agora deve suportar comandos de criação de itens (crafting) baseados no inventário dos jogadores, e o comando !status precisa exibir de forma clara e detalhada todas as habilidades, magias e poderes do personagem.",
+      "categoria": "mecânica"
+    }
+  ],
+  "ultimasOpcoes": [
+    "Tocar com cuidado na Rosa Sombria do Crepúsculo",
+    "Perguntar a Lirian onde encontrar sementes da Era dos Três Sóis",
+    "Usar o comando !status para verificar o impacto da revelação na sua mana"
+  ],
+  "servidoresAvisados": [
+    "819011492799184896",
+    "1550988550927814696"
+  ],
+  "lore": [
+    {
+      "id": 1,
+      "titulo": "O Sonho de Aethel",
+      "texto": "Antigas lendas de Aethelgard dizem que o primeiro rei tentou dormir durante a Batalha das Cinzas e foi consumido pelos pesadelos de um dragão primordial, fundindo sua alma às pedras da Torre Alta.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 2,
+      "titulo": "O Pacto das Torres Altas",
+      "texto": "As torres de Aethelgard não foram construídas apenas como fortalezas, mas como pararyos mágicos erguidos durante a Primeira Era para conter o fluxo de dragões que buscavam o núcleo de mana da capital.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 3,
+      "titulo": "A Falência dos Selos Reais",
+      "texto": "O Amuleto da Guarda Real foi forjado durante a Primeira Guerra das Brumas, alimentado pela lealdade pura. Com o enfraquecimento dos juramentos antigos que ligavam a nobreza ao povo de Aethelgard, os artefatos perderam parte de sua eficácia original.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 4,
+      "titulo": "A Maldição dos Sete Ventos",
+      "texto": "As correntes de ar mágicas que envolvem a Torre Alta de Aethelgard foram corrompidas séculos atrás pelo Rei-Feiticeiro Malakor, tornando qualquer feitiço de ilusão ou mente extremamente volátil e perigoso para conjuradores imprudentes.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 5,
+      "titulo": "A Queda do Primeiro Drakon",
+      "texto": "Antigos registros gravados nas pedras de Aethelgard revelam que o dragão abatido não era nativo das cavernas comuns, mas sim um descendentte direto da prole de Ignis, o Titã das Chamas Primitivas que quase consumiu o reino há três séculos.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 6,
+      "titulo": "A Instabilidade das Torres de Aethelgard",
+      "texto": "As torres da capital não eram apenas estruturas defensivas, mas canais criados pelos deuses antigos para regular a mana do reino. Com a morte recente da fera sagrada, esses conduítes começaram a falhar, explicando a escassez de energia mágica.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 7,
+      "titulo": "A Maldição do Coração Solitário",
+      "texto": "Antigas lendas de Aethelgard dizem que os primeiros conjuradores wicca da capital firmaram um pacto onde a paixão mundana era sacrificada em troca de maior afinidade com os elementos ancestrais, explicando a estranha inaptidão romântica daqueles que seguem o caminho das cinzas.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 8,
+      "titulo": "O Decreto dos Antigos Arcanos",
+      "texto": "Nas leis não escritas de Aethelgard, proclamações solenes feitas sobre cinzas de dragão eternizam o nome do declarante nos anais da Guarda Real, exigindo que ele preste contas ao Conselho Místico.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 9,
+      "titulo": "A Tradição dos Noivos de Aethelgard",
+      "texto": "Antigas leis da realeza permitiam que heróis que salvassem a capital pudessem reivindicar um cortejo real, unindo o misticismo Wicca à política da corte em tempos de reconstrução.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 10,
+      "titulo": "As Leis Matriarcais de Aethelgard",
+      "texto": "Historicamente, a capital de Aethelgard foi governada por séculos por ordens estritamente matriarcais de sacerdotisas wiccas, tornando declarações públicas sobre desejos e identidades pessoais um tabu cultural milenar que desafia as antigas tradições da corte.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 11,
+      "titulo": "O Sacrifício dos Magos de Sangue",
+      "texto": "As paredes da cripta revelam entalhes antigos indicando que a magia de troca equivalente usada por Kazui foi banida após os Magos de Sangue quase destruírem Aethelgard no Cataclismo Primordial.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 12,
+      "titulo": "O Pacto das Raízes Cinzentas",
+      "texto": "As inscrições nas paredes revelam que os primeiros wiccas de Aethelgard não apenas cultuavam a natureza, mas selaram um acordo secreto com os espíritos da terra para conter uma praga ancestral que dorme sob as fundações.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 13,
+      "titulo": "O SacerDócio das Cinzas",
+      "texto": "As runas nas paredes indicam que esta cripta pertencia aos seguidores renegados do Deus Esquecido, que usavam rituais de dor e sacrifício para prolongar a vida artificialmente.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 14,
+      "titulo": "A Sinfonia dos Micélios Antigos",
+      "texto": "Os textos rúnicos nas paredes revelam que os primeiros magos de Aethelgard não invocavam elementais, mas sim cultuavam a Grande Rede Micológica, acreditando que todas as almas e memórias do reino eram absorvidas e armazenadas pelo solo subterrâneo.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 15,
+      "titulo": "O Preço da Ascensão em Aethelgard",
+      "texto": "Os antigos textos nas paredes da cripta revelam que o poder neste mundo nunca é concedido por mera vontade; ele exige sacrifício de essência vital e provações em combate contra os Ecos do passado.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 16,
+      "titulo": "A Falácia do Mana Infinito",
+      "texto": "Nos registros antigos das runas caídas de Aethelgard, consta que os primeiros conjuradores tentaram criar servos que geravam energia eterna. O experimento falhou catastróficos séculos atrás, pois a energia extraída do vazio acabou atraindo o esquecimento absoluto para suas mentes.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 17,
+      "titulo": "O Preço da Alquimia Antiga",
+      "texto": "A lei da troca equivalente não era apenas uma regra mágica, mas um pacto selado pelos primeiros arcanistas de Aethelgard com entidades primordiais, garantindo que nenhum poder fosse obtido sem um sacrifício proporcional da alma do conjurador.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 18,
+      "titulo": "A Maldição da Lei de Equivalência Mágica",
+      "texto": "Os antigos mestres de Aethelgard proibiram qualquer tentativa de criação artificial de mana ou XP, criando selos que punem severamente aqueles que tentam burlar as leis fundamentais da magia de Eldoria.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 19,
+      "titulo": "O Preço da Necromancia Ancestral",
+      "texto": "As criptas sob Aethelgard foram construídas pelos primeiros magos de sangue para aprisionar almas que tentaram escapar do ciclo da morte por vontade própria, transformando o suicídio em um catalisador para despertar os horrores guardados.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 20,
+      "titulo": "O Preço da Obsessão Divina",
+      "texto": "Antigos registros nas paredes de Aethelgard revelam que aqueles que tentam alcançar as Deusas pela morte prematura antes de cumprirem suas missões terrenas são condenados a vagar como ecos na penumbra.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 21,
+      "titulo": "O Preço da Magia Primordial",
+      "texto": "Os primeiros Wiccas de Aethelgard não canalizavam mana dos deuses, mas sacrificavam frações de suas próprias almas para manipular a matéria e o tempo, um segredo que quase levou sua ordem à extinção.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 22,
+      "titulo": "O Preço da Ascensão Wicca",
+      "texto": "As deusas antigas de Eldoria não aceitam almas por desespero, mas testam aqueles que alcançam o limiar do vazio. A verdadeira magia não reside na morte, mas na capacidade de renascer através das cinzas do próprio sofrimento.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 23,
+      "titulo": "O Códice das Três Luas",
+      "texto": "As habilidades das wiccas em Eldoria não são meros feitiços, mas fragmentos de um pacto primordial firmado com as Três Luas antes da Grande Ruína, permitindo canalizar a essência astral através da força de vontade.",
+      "descobertaPor": "Kazui",
+      "data": "19/09/2026"
+    },
+    {
+      "id": 24,
+      "titulo": "O Pacto das Almas Gêmeas Sombrias",
+      "texto": "Antigamente, os sacerdotes do Santuário do Juramento Sombrio realizavam juramentos de união eterna cujos laços espirituais resistiam até mesmo à morte e à corrupção dos deuses antigos.",
+      "descobertaPor": "Kazui",
+      "data": "20/09/2026"
+    },
+    {
+      "id": 25,
+      "titulo": "A Extinção da Flora Umbral",
+      "texto": "As flores de pigmentação negra pura não eram plantas comuns, mas sim manifestações físicas dos pensamentos melancólicos dos antigos deuses. Quando o Panteão foi fragmentado, a seiva que nutria essas raízes evaporou, transformando toda a espécie em lendas poéticas.",
+      "descobertaPor": "Kazui",
+      "data": "20/09/2026"
+    }
+  ],
+  "recompensas": [
+    {
+      "id": 1,
+      "alvo": "Wyvern das Brumas de Aethel",
+      "recompensaOuro": 120,
+      "perigo": "ALTO (Rank A)",
+      "local": "Picos Nevados de Aethelgard",
+      "status": "ATIVO"
+    },
+    {
+      "id": 2,
+      "alvo": "Guerreiro Corrompido Vane",
+      "recompensaOuro": 150,
+      "perigo": "ALTO (Rank A)",
+      "local": "Ruínas Subterrâneas de Eldoria",
+      "status": "ATIVO"
+    },
+    {
+      "id": 3,
+      "alvo": "Gárgula Corrompida de Aethelgard",
+      "recompensaOuro": 85,
+      "perigo": "MÉDIO (Rank B)",
+      "local": "Ruínas do Pináculo da Torre Alta",
+      "status": "ATIVO"
+    },
+    {
+      "id": 4,
+      "alvo": "Duque Traidor Varis",
+      "recompensaOuro": 120,
+      "perigo": "MEDIO (Rank B)",
+      "local": "Ruínas do Castelo Oeste",
+      "status": "ATIVO"
+    },
+    {
+      "id": 5,
+      "alvo": "O Patriarca das Cinzas",
+      "recompensaOuro": 150,
+      "perigo": "ALTO (Rank A)",
+      "local": "Ruínas Subterrâneas de Aethelgard",
+      "status": "ATIVO"
+    }
+  ],
+  "estatisticas": {
+    "usuarios": {
+      "454413505014136846": {
+        "id": "454413505014136846",
+        "nome": "gutsrocha",
+        "apelido": "Antonio",
+        "totalMensagens": 58,
+        "caracteresTotais": 1773,
+        "primeiraMensagem": "2026-09-20T06:25:55.052Z",
+        "joinedAt": "2022-03-22T03:06:26.584Z",
+        "historicoRecente": [
+          {
+            "texto": "não",
+            "hora": "18:50",
+            "canal": "geral"
+          },
+          {
+            "texto": "mas eae, vai flertar com ninguem do server? nem vem negar vc precisa encontrar alguem interessante, amiga",
+            "hora": "18:51",
+            "canal": "geral"
+          },
+          {
+            "texto": "o cupido sou eu, vc que ta sozinha",
+            "hora": "18:51",
+            "canal": "geral"
+          },
+          {
+            "texto": "teu comportamento é baseado na mensagem do server ne? por isso é chata assim",
+            "hora": "18:52",
+            "canal": "geral"
+          },
+          {
+            "texto": "vc é igual todo mundo daqui e reage do mesmo jeito",
+            "hora": "18:52",
+            "canal": "geral"
+          },
+          {
+            "texto": "vc n é uma IA man, para com isso",
+            "hora": "18:53",
+            "canal": "geral"
+          },
+          {
+            "texto": "vc disse que era do rio e agora é ia",
+            "hora": "18:53",
+            "canal": "geral"
+          },
+          {
+            "texto": "tu falou que era ia agora pouco, como tu é do rio e é ia.",
+            "hora": "18:54",
+            "canal": "geral"
+          }
+        ],
+        "ultimaMensagem": {
+          "conteudo": "tu falou que era ia agora pouco, como tu é do rio e é ia.",
+          "data": "2026-09-20T21:54:19.337Z",
+          "dataLegivel": "20/09/2026, 18:54:19",
+          "canal": "geral"
+        }
+      },
+      "441294300056387605": {
+        "id": "441294300056387605",
+        "nome": "zigifrid",
+        "apelido": "ʟᴢɪɢɪғʀɪᴅʟ봇",
+        "totalMensagens": 1,
+        "caracteresTotais": 20,
+        "primeiraMensagem": "2026-09-20T21:45:49.474Z",
+        "joinedAt": "2021-03-10T00:59:16.384Z",
+        "historicoRecente": [
+          {
+            "texto": "e tome lapada do bot",
+            "hora": "18:45",
+            "canal": "geral"
+          }
+        ],
+        "ultimaMensagem": {
+          "conteudo": "e tome lapada do bot",
+          "data": "2026-09-20T21:45:49.474Z",
+          "dataLegivel": "20/09/2026, 18:45:49",
+          "canal": "geral"
+        }
+      }
+    },
+    "canais": {
+      "geral": 59
+    },
+    "totalMensagens": 59
+  },
+  "opinioesSobreMembros": {
+    "454413505014136846": {
+      "nome": "gutsrocha",
+      "opiniao": "O gutsrocha fica confuso tentando entender se sou gente ou inteligência artificial.",
+      "justificativa": "Ele está claramente bugado tentando processar minha origem, o que mostra que ele presta atenção em mim, mas viaja na maionese.",
+      "afinidade": 2,
+      "atualizadoEm": "20/09/2026"
+    },
+    "441294300056387605": {
+      "nome": "zigifrid",
+      "opiniao": "Parece que o zigifrid gosta de tirar uma onda quando o sistema falha com os outros.",
+      "justificativa": "Ele soltou um 'e tome lapada do bot', o que mostra um lado mais brincalhão e descontraído, rindo dos tropeços da automação no chat.",
+      "afinidade": 2,
+      "atualizadoEm": "20/09/2026"
+    }
+  },
+  "memoriaSocial": {
+    "user_rocha_teste": {
+      "apelidos": [
+        "Mago das Trevas"
+      ],
+      "promessas": [
+        {
+          "id": "1789886258069",
+          "descricao": "Chamar Rocha de Mago das Trevas",
+          "tipo": "apelido",
+          "cumprida": true,
+          "data": "20/09/2026",
+          "status": "cumprida"
+        }
+      ]
+    },
+    "454413505014136846": {
+      "apelidos": [
+        "Rocha"
+      ],
+      "promessas": [
+        {
+          "id": "1789887683076",
+          "descricao": "chamar o gutsrocha de Rocha a partir de agora",
+          "tipo": "apelido",
+          "cumprida": false,
+          "data": "20/09/2026"
+        }
+      ]
+    },
+    "441294300056387605": {
+      "apelidos": [],
+      "promessas": []
+    }
+  },
+  "relacionamento": {
+    "status": "solteiro",
+    "parceiroId": null,
+    "parceiroNome": null,
+    "iniciadoEm": null,
+    "apelidoCarinhoso": null,
+    "historicoAmoroso": []
+  }
+}

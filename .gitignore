@@ -1,0 +1,20 @@
+# Segredos e chaves de API (NUNCA SUBIR)
+.env
+.env.*
+*.env
+
+# Dependencias
+node_modules/
+
+# Logs e arquivos temporarios
+*.log
+bot.log
+bot_erro.log
+
+# Binarios de Windows
+bin/*.exe
+bin/
+
+# Pacotes compactados
+discloud-deploy.zip
+*.zip

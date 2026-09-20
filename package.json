@@ -1,0 +1,22 @@
+{
+  "name": "bot-discord-supremo",
+  "version": "1.0.0",
+  "description": "Bot Administrador do Servidor + Mestre de RPG Multiplayer com aprendizado contínuo no canal #melhorias",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.19.2",
+    "@distube/ytdl-core": "^4.16.12",
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.7.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "libsodium-wrappers": "^0.8.4",
+    "opusscript": "^0.0.8",
+    "play-dl": "^1.9.7",
+    "yt-dlp-wrap": "^2.3.12",
+    "yt-search": "^2.13.1"
+  }
+}
