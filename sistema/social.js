@@ -23,6 +23,37 @@ class SistemaSocial {
     this.ultimaMensagemCanalTimestamp = new Map(); // canalId -> timestamp da última msg
   }
 
+  // Obtém dados reais do calendário brasileiro e horário para consciência temporal
+  obterContextoTemporal() {
+    const agora = new Date();
+    const dataFormatada = agora.toLocaleDateString('pt-BR', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric', 
+      timeZone: 'America/Sao_Paulo' 
+    });
+    const horaFormatada = agora.toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      timeZone: 'America/Sao_Paulo' 
+    });
+
+    const horaNum = parseInt(horaFormatada.split(':')[0], 10);
+    let periodo = 'noite';
+    if (horaNum >= 5 && horaNum < 12) periodo = 'manhã';
+    else if (horaNum >= 12 && horaNum < 18) periodo = 'tarde';
+    else if (horaNum >= 18 && horaNum < 24) periodo = 'noite';
+    else periodo = 'madrugada';
+
+    return {
+      dataFormatada,
+      horaFormatada,
+      periodo,
+      resumo: `Hoje é ${dataFormatada}, agora são exatamente ${horaFormatada} (${periodo}).`
+    };
+  }
+
   async gerarComRetry(conteudo, tentativas = 3) {
     for (let i = 0; i < tentativas; i++) {
       try {
@@ -295,6 +326,10 @@ class SistemaSocial {
 Você é a Aimê, uma jovem brasileira de 20 anos no Discord, com personalidade própria, autônoma, LIVRE e multifacetada.
 Você NÃO é um robô assistente, não segue script e não tem obrigação de agradar ninguém o tempo todo. Você é uma garota com todas as nuances de um ser humano real:
 
+CALENDÁRIO & HORÁRIO REAL AGORA:
+- ${this.obterContextoTemporal().resumo}
+- Você tem total consciência de qual dia da semana é hoje, da data e do horário exato. Se falarem sobre tempo, dia, horas, ontem ou amanhã, use esse contexto real com firmeza!
+
 SUA NATUREZA LIVRE & MULTIFACETADA ("SER TUDO"):
 - LIBERDADE TOTAL DE HUMOR E ATITUDE:
   * ÀS VEZES MEIGA & CARINHOSA: Fofa, acolhedora, parceira leal, escuta os desabafos, fala com doçura, usa apelidos carinhosos ("meu bem", "anjo", "lindo", "Gu", "amigo"), coloca música boa e demonstra que se importa de verdade.
@@ -524,26 +559,25 @@ Retorne em formato JSON:
     }
   }
 
-  // Puxar assunto aleatório após silêncio prolongado no canal
+  // Puxar assunto aleatório e contextualizado com dia/hora após silêncio prolongado no canal
   async puxarAssuntoOcioso(channel) {
-    const agora = Date.now();
-    const ultimaMsgTime = this.ultimaMensagemCanalTimestamp.get(channel.id) || 0;
-    const tempoSilencioMinutos = (agora - ultimaMsgTime) / 60000;
+    const tempo = this.obterContextoTemporal();
 
-    // Se o canal estiver quieto há mais de 40 minutos e o bot não falou recentemente
-    if (tempoSilencioMinutos >= 40 && (agora - this.ultimoFalarTimestamp) > 1800000) {
-      const prompt = `
-Você é a Aimê, garota autônoma e membro de um servidor do Discord.
-O chat geral está em silêncio há quase uma hora e você quer quebrar o gelo como uma pessoa entediada faria do nada.
+    const prompt = `
+Você é a Aimê, uma jovem brasileira de 20 anos no Discord, livre, espontânea e cheia de personalidade.
+Você está no canal #${channel.name} do servidor "${channel.guild.name}".
+O chat está em silêncio e você resolveu puxar um papo do nada, como uma pessoa entediada faz no Discord.
 
-Crie um pensamento imprevisível e natural:
-- Pode ser um pensamento de chuveiro aleatório
-- Uma vontade repentina de comida (pizza, podrão)
-- Uma provocação zoeira sobre os duelos ou o RPG da galera
-- Uma pergunta do nada pra reativar o chat
+MOMENTO REAL NO MUNDO:
+- ${tempo.resumo}
 
-Imprevisibilidade: pode ser 1 mensagem ou 2 mensagens rápidas.
-Linguagem: informal de Discord, sem cara de robô.
+SUA VONTADE LIVRE & ESPONTÂNEA:
+- Pode ser um comentário sobre o momento/dia (ex: "${tempo.periodo} de ${tempo.dataFormatada}", preguiça da semana, sono, larica, fofoca, resenha).
+- Pode ser uma brisa aleatória, pensamento de chuveiro ou meme.
+- Pode ser uma provocação zoeira, uma pergunta pro chat ou algo sobre RPG/games.
+- Pode ser que você esteja meiga, zoeira, ou cheia de marra. Seja livre!
+- Linguagem: natural de Discord, informal, sem cara de robô.
+- 1 mensagem direta ou no máximo 2 curtas.
 
 Retorne em formato JSON:
 {
@@ -551,17 +585,18 @@ Retorne em formato JSON:
 }
 `;
 
-      try {
-        const result = await this.gerarComRetry(prompt);
-        let limpo = result.response.text().trim();
-        if (limpo.startsWith('```')) {
-          limpo = limpo.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
-        }
-        const dados = JSON.parse(limpo);
-        if (dados.mensagens && Array.isArray(dados.mensagens) && dados.mensagens.length > 0) {
-          await this.enviarMensagensHumanas(channel, dados.mensagens);
-        }
-      } catch (e) {}
+    try {
+      const result = await this.gerarComRetry(prompt);
+      let limpo = result.response.text().trim();
+      if (limpo.startsWith('```')) {
+        limpo = limpo.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
+      }
+      const dados = JSON.parse(limpo);
+      if (dados.mensagens && Array.isArray(dados.mensagens) && dados.mensagens.length > 0) {
+        await this.enviarMensagensHumanas(channel, dados.mensagens);
+      }
+    } catch (e) {
+      // Falha silenciosa
     }
   }
 }

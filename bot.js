@@ -124,6 +124,41 @@ client.once('clientReady', async () => {
   console.log(`🛡️  Administração e moderação prontas para uso.`);
   console.log('═'.repeat(65) + '\n');
 
+  // Sistema de Espontaneidade Independente e Orgânica por Servidor
+  // Cada servidor tem seu próprio temporizador com intervalo aleatório variável (nunca no mesmo horário)
+  const agendarEspontaneidadeGuild = (guild) => {
+    const minutosAleatorios = Math.floor(Math.random() * (150 - 40 + 1)) + 40;
+    const ms = minutosAleatorios * 60 * 1000;
+
+    setTimeout(async () => {
+      try {
+        const canalGeral = guild.channels.cache.find(c => 
+          c.isTextBased() && (c.name.includes('geral') || c.name.includes('chat') || c.name.includes('resenha') || c.name.includes('general'))
+        );
+        if (canalGeral) {
+          const agora = Date.now();
+          const ultimaMsg = social.ultimaMensagemCanalTimestamp.get(canalGeral.id) || 0;
+          const minutosSemFalar = (agora - ultimaMsg) / 60000;
+          if (minutosSemFalar >= 35) {
+            await social.puxarAssuntoOcioso(canalGeral);
+          }
+        }
+      } catch (err) {
+        console.log(`[Espontaneidade] Aviso no servidor "${guild.name}":`, err.message);
+      } finally {
+        agendarEspontaneidadeGuild(guild);
+      }
+    }, ms);
+  };
+
+  client.guilds.cache.forEach(guild => {
+    agendarEspontaneidadeGuild(guild);
+  });
+
+  client.on('guildCreate', guild => {
+    agendarEspontaneidadeGuild(guild);
+  });
+
   // Enviar mensagem de apresentação apenas em servidores novos (uma única vez!)
   if (!banco.dados.servidoresAvisados) {
     banco.dados.servidoresAvisados = client.guilds.cache.map(g => g.id);
