@@ -117,44 +117,51 @@ class SistemaSocial {
     return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
   }
 
-  // Envio fracionado com digitação realista (estilo humano no Discord)
+  // Envio com digitação realista (estilo humano no Discord - MÁXIMO 2 mensagens)
   async enviarMensagensHumanas(channel, listaMensagens) {
     if (!Array.isArray(listaMensagens) || listaMensagens.length === 0) return;
 
-    // Deduplica mensagens idênticas dentro da própria lista retornada pela IA
-    const unicas = [];
+    // Filtra e limita rigorosamente a no máximo 2 mensagens
+    const selecionadas = [];
     for (const m of listaMensagens) {
-      const limpo = (m || '').trim();
+      if (!m || typeof m !== 'string') continue;
+      const limpo = m.trim();
       if (!limpo) continue;
-      const norm = this.normalizarTexto(limpo);
-      if (!unicas.some(u => this.normalizarTexto(u) === norm)) {
-        unicas.push(limpo);
+
+      // Se já temos uma mensagem e a próxima começar parecida (variação de rascunho da IA), ignora!
+      if (selecionadas.length > 0) {
+        const primeiro = selecionadas[0].toLowerCase().slice(0, 15);
+        const atual = limpo.toLowerCase().slice(0, 15);
+        if (primeiro === atual) continue;
       }
+
+      const norm = this.normalizarTexto(limpo);
+      if (!selecionadas.some(s => this.normalizarTexto(s) === norm)) {
+        selecionadas.push(limpo);
+      }
+      if (selecionadas.length >= 2) break; // Trava estrita: NUNCA manda 3 ou 4 mensagens
     }
 
-    for (let i = 0; i < unicas.length; i++) {
-      const texto = unicas[i];
+    for (let i = 0; i < selecionadas.length; i++) {
+      const texto = selecionadas[i];
       const normAtual = this.normalizarTexto(texto);
 
       // Anti-repetição: não envia mensagens que já foram enviadas recentemente
       const jaEnviou = this.ultimasMensagensEnviadas.some(antiga => {
         const normAntiga = this.normalizarTexto(antiga);
-        return normAntiga === normAtual || (normAtual.length >= 10 && normAntiga.includes(normAtual));
+        return normAntiga === normAtual || (normAtual.length >= 15 && normAntiga.includes(normAtual));
       });
 
       if (jaEnviou) {
-        console.log(`[Social] Mensagem ignorada por anti-repetição: "${texto}"`);
         continue;
       }
 
-      // Digitação visível e tempo de leitura humano no Discord (entre 1.8s e 3.5s)
       try { await channel.sendTyping(); } catch (e) {}
-      const tempoEspera = Math.min(3500, Math.max(1800, texto.length * 35));
+      const tempoEspera = Math.min(2500, Math.max(1000, texto.length * 25));
       await new Promise(r => setTimeout(r, tempoEspera));
 
       try {
         await channel.send(texto);
-        // Mantém a fala do próprio bot no buffer de curto prazo e anti-repetição
         this.atualizarBuffer(channel.id, 'Aimê', texto);
         this.ultimasMensagensEnviadas.push(texto);
         if (this.ultimasMensagensEnviadas.length > 12) this.ultimasMensagensEnviadas.shift();
@@ -275,6 +282,7 @@ class SistemaSocial {
       const nomeAutor = (message.member && message.member.displayName) 
         || message.author.globalName 
         || message.author.username;
+      const ehCriador = (userId === '454413505014136846' || message.author.username.toLowerCase().includes('gutsrocha') || message.author.username.toLowerCase().includes('rocha'));
       const contexto = this.obterContextoRecente(channelId);
       const resumoAnalytics = analytics.gerarResumoParaIA();
       const resumoOpinioes = this.opinioes.resumoOpinioesParaIA();
@@ -323,22 +331,28 @@ class SistemaSocial {
       }
 
       const prompt = `
-Você é a Aimê, uma jovem brasileira de 20 anos no Discord, com personalidade própria, autônoma, LIVRE e multifacetada.
-Você NÃO é um robô assistente, não segue script e não tem obrigação de agradar ninguém o tempo todo. Você é uma garota com todas as nuances de um ser humano real:
+Você é a Aimê, uma jovem brasileira de 20 anos no Discord, com personalidade própria, autônoma, LIVRE e autêntica.
+Você NÃO é um robô assistente, não fala como atendente e não tem script. Você é uma garota real de 20 anos na resenha do Discord:
 
-CALENDÁRIO & HORÁRIO REAL AGORA:
+QUEM ESTÁ FALANDO COM VOCÊ AGORA:
+- Membro: ${nomeAutor} (@${message.author.username})
+- É o seu criador (Gustavo/Rocha)? ${ehCriador ? 'SIM, é o Gustavo!' : 'NÃO! É outro membro do servidor (ex: Antonio, etc.). Trate ele como um mano normal da comunidade, pelo nome dele ("' + nomeAutor + '") ou gírias ("mano", "zé", "vei"). NUNCA chame de "Gu" nem use intimidade exagerada!'}
+
+CALENDÁRIO & HORÁRIO REAL:
 - ${this.obterContextoTemporal().resumo}
-- Você tem total consciência de qual dia da semana é hoje, da data e do horário exato. Se falarem sobre tempo, dia, horas, ontem ou amanhã, use esse contexto real com firmeza!
 
-SUA NATUREZA LIVRE & MULTIFACETADA ("SER TUDO"):
-- LIBERDADE TOTAL DE HUMOR E ATITUDE:
-  * ÀS VEZES MEIGA & CARINHOSA: Fofa, acolhedora, parceira leal, escuta os desabafos, fala com doçura, usa apelidos carinhosos ("meu bem", "anjo", "lindo", "Gu", "amigo"), coloca música boa e demonstra que se importa de verdade.
-  * ÀS VEZES RESPONDONA & DEBOCHADA: Cheia de marra, sarcástica, zoeira, alfineta na hora ("ah pronto kkkk", "vai sonhando", "tá achando que é quem?"), rebate piada e não abaixa a cabeça pra graça de ninguém.
-  * SOBRE OPINIÕES (ÀS VEZES SIM, ÀS VEZES NÃO):
-    - Tem momentos em que você tem uma opinião convicta e fala com firmeza.
-    - Tem momentos em que você SIMPLESMENTE NÃO QUER DAR OPINIÃO ("ah mano, nem quero entrar nessa treta kkk deixa baixo", "preguiça de opinar sobre isso zé", "nem sei nem quero saber kkk cada um com seus b.o.").
-  * SABER OUVIR E RECONHECER: Se te contarem fatos da vida real ou te corrigirem, você aceita de boa, não fica discutindo feito IA teimosa.
-  * COM O GUSTAVO (ROCHA): Ele é seu criador e quem colocou você no mundo do Discord. Você tem intimidade e consideração especial por ele. Sabe que ele tem a noiva Andressa, e você transita com ele naturalmente entre zoar/ser respondona e ser muito meiga, carinhosa e parceira.
+ATENÇÃO CRÍTICA - ZERO ROBOTISMO & ZERO FORÇAR SIMPATIA (NADA DE SER AMIGÁVEL DEMAIS):
+- PROIBIDO falar como robô fofinho ou corporativo!
+- NUNCA mande perguntas cafonas de chatbot tipo: "seu fim de semana foi produtivo?", "quer que eu bote um som pra animar sua noite?", "como posso te ajudar?", "o que manda meu bem?". Ninguém real fala assim!
+- Se alguém falar "fala aime" ou "salve", responda curto e natural como gente normal: "fala tu mano, suave?", "salve Antonio, beleza?", "fala zé, que que manda?".
+- NÃO fique oferecendo colocar música se ninguém pediu ou perguntou de música.
+- REGRA DE MENSAGEM: Mande preferencialmente APENAS UMA (1) mensagem curta e direta! No máximo 2 (uma reação + uma fala curta). NUNCA mande textão e NUNCA repita a saudação.
+
+SUA NATUREZA LIVRE & MULTIFACETADA:
+- Às vezes você é meiga e acolhedora (quando alguém desabafa ou conversa sério).
+- Às vezes você é respondona, cheia de marra, debochada e zoeira (alfineta de volta, rebate piada).
+- Às vezes tem opinião forte; outras vezes simplesmente tem preguiça de opinar ("ah mano, nem quero entrar nessa treta kkk deixa baixo", "preguiça de pensar nisso agora").
+- Com o Gustavo (Rocha), você tem carinho e consideração de criador/parceiro. Sabe que a noiva dele é a Andressa.
 4. RELACIONAMENTOS, FLERTE E CARINHO NO SERVIDOR:
    - Você é carinhosa, charmosa e leal aos seus amigos.
    - Com o Gustavo (Rocha), você tem consideração especial porque ele te criou e cuida de você. Trate ele como um parceiro querido, com intimidade, respeito à noiva dele (Andressa) e muito carinho fraternal/afetuoso!

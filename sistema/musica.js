@@ -20,7 +20,9 @@ const ytSearch = require('yt-search');
 const YTDlpWrap = require('yt-dlp-wrap').default;
 
 const BIN_DIR = path.join(__dirname, '..', 'bin');
-const YTDLP_PATH = path.join(BIN_DIR, 'yt-dlp.exe');
+const isWin = process.platform === 'win32';
+const YTDLP_BINARY_NAME = isWin ? 'yt-dlp.exe' : 'yt-dlp';
+const YTDLP_PATH = path.join(BIN_DIR, YTDLP_BINARY_NAME);
 
 class SistemaDeMusica {
   constructor(apiKey) {
@@ -36,9 +38,14 @@ class SistemaDeMusica {
     try {
       if (!fs.existsSync(BIN_DIR)) fs.mkdirSync(BIN_DIR, { recursive: true });
       if (!fs.existsSync(YTDLP_PATH)) {
-        console.log('[Música] Baixando binário oficial do yt-dlp...');
+        console.log(`[Música] Baixando binário oficial do yt-dlp (${isWin ? 'Windows' : 'Linux'})...`);
         await YTDlpWrap.downloadFromGithub(YTDLP_PATH);
+        if (!isWin) {
+          try { fs.chmodSync(YTDLP_PATH, 0o755); } catch (e) {}
+        }
         console.log('[Música] yt-dlp pronto para uso!');
+      } else if (!isWin) {
+        try { fs.chmodSync(YTDLP_PATH, 0o755); } catch (e) {}
       }
       this.ytDlp = new YTDlpWrap(YTDLP_PATH);
     } catch (err) {
@@ -116,23 +123,27 @@ Retorne em formato JSON:
       this.ytDlp = new YTDlpWrap(YTDLP_PATH);
     }
 
-    const nodePath = 'C:\\Program Files\\nodejs\\node.exe';
+    let ffmpegExecutable = 'ffmpeg';
+    try {
+      ffmpegExecutable = require('ffmpeg-static') || 'ffmpeg';
+    } catch (e) {}
 
-    // Obter URL direta do áudio com bypass
-    const streamUrl = await this.ytDlp.execPromise([
+    // Obter URL direta de streaming de áudio
+    const args = [
       url,
-      '-f', 'ba/b',
-      '--extractor-args', 'youtube:player_client=android,web',
-      '--js-runtimes', `node:${nodePath}`,
+      '-f', 'bestaudio/ba/b',
       '--no-playlist',
       '-g'
-    ]);
+    ];
 
-    const ffmpeg = spawn('ffmpeg', [
+    const streamOutput = await this.ytDlp.execPromise(args);
+    const audioUrl = streamOutput.trim().split('\n')[0].trim();
+
+    const ffmpeg = spawn(ffmpegExecutable, [
       '-reconnect', '1',
       '-reconnect_streamed', '1',
       '-reconnect_delay_max', '5',
-      '-i', streamUrl.trim(),
+      '-i', audioUrl,
       '-f', 's16le',
       '-ar', '48000',
       '-ac', '2',
