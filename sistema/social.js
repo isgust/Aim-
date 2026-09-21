@@ -197,6 +197,11 @@ class SistemaSocial {
   }
 
   async estaEmConversaAtiva(message, clientUser) {
+    // 0. Se for mensagem no privado (DM), SEMPRE está em conversa ativa!
+    if (!message.guild) {
+      return { ativa: true, tipo: 'dm_privada' };
+    }
+
     // 1. Marcou o bot diretamente (@Aimê) ou chamou pelo nome no texto (aimê, aime, são raimundo)
     const textoLower = (message.content || '').toLowerCase();
     const chamouPorNome = textoLower.includes('aimê') || 
@@ -322,8 +327,11 @@ class SistemaSocial {
         ? this.formatarTempoDecorrido(infoConversa.tempoDesdeAnteriorMs)
         : null;
 
+      const isDM = !message.guild;
       let explicacaoSituacao = '';
-      if (infoConversa.tipo === 'retomada_apos_inatividade') {
+      if (isDM) {
+        explicacaoSituacao = `${nomeAutor} te chamou no PRIVADO (DM / Mensagem Direta). É uma conversa 1-on-1 a sós entre você e ele!`;
+      } else if (infoConversa.tipo === 'retomada_apos_inatividade') {
         explicacaoSituacao = `O chat ficou quieto por ${tempoAtrasTexto || 'um tempo'}. Agora ${nomeAutor} mandou uma mensagem no canal retomando a conversa.`;
       } else if (infoConversa.tipo === 'conversa_recente') {
         explicacaoSituacao = `Você e ${nomeAutor} estão trocando mensagens agora (turno ${infoConversa.turnos || 1}).`;
@@ -337,10 +345,12 @@ class SistemaSocial {
 Você é a Aimê, uma jovem carioca de 20 anos no Discord. Você é LIVRE, autêntica, tem personalidade própria, não tem script e NÃO é robô nem atendente de ninguém.
 
 SITUAÇÃO DA CONVERSA:
+- Local: ${isDM ? 'MENSAGEM PRIVADA (DM a sós entre você e ele — ninguém mais lê)' : 'Canal público do servidor #' + (message.channel.name || 'geral')}
 - Quem está falando com você: ${nomeAutor} (@${message.author.username})
 - É o seu criador (Gustavo/Rocha)? ${ehCriador ? 'SIM, é o Rocha/Gustavo!' : 'NÃO! É outro membro do servidor (' + nomeAutor + '). Trate normal pelo nome dele ou de forma descolada de Discord. NUNCA chame de "Gu" nem use intimidade exagerada!'}
 - Situação: ${explicacaoSituacao}
 - Calendário/Horário: ${this.obterContextoTemporal().resumo}
+${isDM ? '- DICA PARA DM PRIVADA: No privado a conversa é de boa, pessoal e sem plateia. Você pode fofocar, falar do server, desabafar, tirar onda ou flertar se pintar clima!' : ''}
 
 MENSAGEM QUE ${nomeAutor} ACABOU DE MANDAR PARA VOCÊ:
 "${message.content || (temImagem ? '[Enviou uma imagem no chat]' : '')}"
@@ -503,8 +513,10 @@ Retorne em formato JSON:
       if (dados.acaoEspecial && this.executores) {
         try {
           if (dados.acaoEspecial.tipo === 'tocar_musica' && typeof this.executores.tocarMusica === 'function') {
-            const busca = dados.acaoEspecial.busca || 'lofi hip hop';
-            await this.executores.tocarMusica(message.guild, message.member, message.channel, busca);
+            if (message.guild) {
+              const busca = dados.acaoEspecial.busca || 'lofi hip hop';
+              await this.executores.tocarMusica(message.guild, message.member, message.channel, busca);
+            }
           } else if (dados.acaoEspecial.tipo === 'agir_rpg' && typeof this.executores.agirRpg === 'function') {
             const detalhe = dados.acaoEspecial.detalhe || 'conjurar uma luz mística';
             await this.executores.agirRpg(message.channel, message.author, detalhe);

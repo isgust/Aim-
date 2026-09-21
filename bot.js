@@ -15,6 +15,7 @@ process.on('uncaughtException', (err) => {
 const { 
   Client, 
   GatewayIntentBits, 
+  Partials,
   PermissionFlagsBits,
   EmbedBuilder 
 } = require('discord.js');
@@ -42,10 +43,12 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildVoiceStates
-  ]
+  ],
+  partials: [Partials.Channel, Partials.Message]
 });
 
 const mestre = new MestreIA(GEMINI_KEY);
@@ -207,7 +210,9 @@ client.once('clientReady', async () => {
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
-  console.log(`[Chat] [#${message.channel.name}] ${message.author.username}: ${message.content}`);
+  const isDM = !message.guild;
+  const canalLog = isDM ? '[DM Privada]' : `[#${message.channel.name || 'desconhecido'}]`;
+  console.log(`[Chat] ${canalLog} ${message.author.username}: ${message.content}`);
 
   // 1. Data Analytics do Servidor (registra quem falou, contagem de caracteres, última atividade)
   analytics.registrarMensagem(message);
@@ -220,14 +225,18 @@ client.on('messageCreate', async (message) => {
     message.author.username,
     message.author.id,
     message.content,
-    message.mentions.users.first()
+    message.mentions && message.mentions.users ? message.mentions.users.first() : null
   ).catch(() => {});
 
-  const canalNome = message.channel.name.toLowerCase();
+  const canalNome = isDM ? 'dm-privada' : (message.channel.name ? message.channel.name.toLowerCase() : 'geral');
   const conteudo = message.content.trim();
 
-  // Se o usuário está em conversa ativa com o São Raimundo:
-  // (marcou @São Raimundo, deu reply no Discord em mensagem dele, continuidade recente, ou chat que ficou parado onde a última fala foi do bot)
+  // Se o usuário mandou mensagem no privado (DM) ou está em conversa ativa no canal do servidor:
+  if (isDM && !conteudo.startsWith(PREFIXO)) {
+    await social.responderConversa(message, { ativa: true, tipo: 'dm_privada' });
+    return;
+  }
+
   const emConversa = await social.estaEmConversaAtiva(message, client.user);
   if (!conteudo.startsWith(PREFIXO) && emConversa && emConversa.ativa) {
     await social.responderConversa(message, emConversa);
