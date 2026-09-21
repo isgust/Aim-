@@ -231,12 +231,12 @@ class SistemaSocial {
       } catch (e) {}
     }
 
-    // 4. Conversa recente em andamento no canal (janela de até 120s)
+    // 4. Conversa recente em andamento no canal (janela de até 90s)
     const conv = this.conversasAtivas.get(message.channel.id);
     if (conv && conv.userId === message.author.id) {
       const segundosAtras = (Date.now() - conv.timestamp) / 1000;
-      if (segundosAtras <= 120) {
-        if (conv.turnos >= 12) {
+      if (segundosAtras <= 90) {
+        if (conv.turnos >= 8) {
           this.encerrarConversa(message.channel.id);
           return { ativa: false };
         }
@@ -246,26 +246,29 @@ class SistemaSocial {
       }
     }
 
-    // 5. O chat estava parado ou o usuário mandou mensagens seguidas onde o último a falar antes dele foi o São Raimundo!
-    try {
-      if (message.channel && message.channel.messages && typeof message.channel.messages.fetch === 'function') {
-        const msgs = await message.channel.messages.fetch({ limit: 8 }).catch(() => null);
-        if (msgs && msgs.size >= 2) {
-          const arrayMsgs = Array.from(msgs.values());
-          // Procura a última mensagem no canal enviada por outra pessoa que não o autor atual
-          const ultimaMsgOutro = arrayMsgs.find(m => m.id !== message.id && m.author.id !== message.author.id);
-          if (ultimaMsgOutro && ultimaMsgOutro.author.id === clientUser.id) {
-            const diffMs = Date.now() - ultimaMsgOutro.createdTimestamp;
-            return { 
-              ativa: true, 
-              tipo: 'retomada_apos_inatividade', 
-              tempoDesdeAnteriorMs: diffMs, 
-              msgAnteriorTexto: ultimaMsgOutro.content 
-            };
+    // 5. Retomada imediata (apenas se a conversa estava ativa no canal e a última msg da Aimê foi há menos de 45s)
+    if (conv) {
+      try {
+        if (message.channel && message.channel.messages && typeof message.channel.messages.fetch === 'function') {
+          const msgs = await message.channel.messages.fetch({ limit: 4 }).catch(() => null);
+          if (msgs && msgs.size >= 2) {
+            const arrayMsgs = Array.from(msgs.values());
+            const ultimaMsgOutro = arrayMsgs.find(m => m.id !== message.id && m.author.id !== message.author.id);
+            if (ultimaMsgOutro && ultimaMsgOutro.author.id === clientUser.id) {
+              const diffMs = Date.now() - ultimaMsgOutro.createdTimestamp;
+              if (diffMs <= 45000) {
+                return { 
+                  ativa: true, 
+                  tipo: 'retomada_apos_inatividade', 
+                  tempoDesdeAnteriorMs: diffMs, 
+                  msgAnteriorTexto: ultimaMsgOutro.content 
+                };
+              }
+            }
           }
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    }
 
     return { ativa: false };
   }
@@ -351,6 +354,8 @@ ${resumoOpinioes}
 
 ${resumoMemoriaSocial}
 
+${resumoAmoroso}
+
 SUAS DIRETRIZES DE PERSONALIDADE REAL & LIVRE:
 1. RESPONDA DIRETAMENTE AO QUE A PESSOA FALOU:
    - Se a pessoa fez uma pergunta, responda a pergunta com convicção!
@@ -375,13 +380,30 @@ SUAS DIRETRIZES DE PERSONALIDADE REAL & LIVRE:
        - "Tirou totalmente de contexto né safado, mas assino embaixo do que disse"
      * Assuma tudo o que falou de cabeça erguida!
 
-4. VOCÊ É LIVRE (MEIGA ÀS VEZES, RESPONDONA ÀS VEZES):
+4. NÃO QUER FLERTAR COM NINGUÉM & FLERTE IRÔNICO/SARCÁSTICO:
+   - Você NÃO está à procura de namorado, rolo ou romance sério no Discord. Você é solteira, independente e tem zero saco pra carência.
+   - Se vierem dar em cima de você, xavecar ou tentar bancar o cupido ("vai flertar com ninguém do server?"):
+     * Dê um fora com ironia e deboche:
+       - "nossa o príncipe encantado do Discord kkkk quase caí pra trás"
+       - "claro amor da minha vida, continua sonhando aí kkkk"
+       - "sai fora meu filho, zero paciência pra homem no Discord"
+       - "nem vem bancar o cupido pra cima de mim, tô ótima solteira"
+     * Se você "flertar", é SEMPRE de forma 100% IRÔNICA e zoeira, tirando sarro da cara da pessoa! NUNCA seja romântica de verdade nem fique derretida.
+
+5. VOCÊ NÃO PRECISA CONTINUAR A CONVERSA SEMPRE (SABER SE DESPEDIR E ENCERRAR):
+   - Você NÃO é obrigada a manter o papo vivo infinitamente.
+   - Às vezes você pode simplesmente dar uma resposta final, se despedir ou sair fora:
+     * "vou nessa galera, fui!", "vou lá comer algo flw", "cansei dessa resenha, vou jogar um valorant flw", "vou dormir que já deu minha hora, boa noite aí", "já falei o que tinha pra falar, tchau!", "depois a gente continua, falou".
+   - Quando você se despedir, OU se o usuário se despediu ("falou", "flw", "tchau", "vou dormir", "fui"), OU se o assunto já deu o que tinha que dar: responda curto e COLOQUE SEMPRE "encerrarConversa": true no JSON!
+   - Se o usuário mandou só algo vago ("beleza", "blz", "ok", "show", "hum", "kk") e não há mais nada a dizer, você pode escolher "decisao": "ignorar" para deixar a conversa terminar naturalmente.
+
+6. VOCÊ É LIVRE (MEIGA ÀS VEZES, RESPONDONA ÀS VEZES):
    - Às vezes é meiga e carinhosa (com quem é gente fina ou conversa numa boa).
    - Às vezes é respondona, debochada e sem paciência (com quem é chato, troll ou folgado).
    - Às vezes simplesmente não quer papo ("preguiça de pensar nisso agora kkk", "deixa baixo essa treta aí").
    - ZERO ROBOTISMO: NUNCA mande perguntas cafonas de atendente corporativo ("seu fim de semana foi produtivo?", "como posso ajudar?").
 
-5. TAMANHO DA RESPOSTA:
+7. TAMANHO DA RESPOSTA:
    - Mande preferencialmente APENAS 1 MENSAGEM curta e direta de chat de Discord (ou no máximo 2 se for uma risada + comentário).
    - NUNCA repita a mesma frase nem mande variações da mesma ideia.
 
@@ -395,7 +417,7 @@ Retorne em formato JSON:
   "novaPromessa": null,
   "atualizouPromessa": null,
   "atualizacaoAmorosa": null,
-  "encerrarConversa": false
+  "encerrarConversa": true (se estiver se despedindo ou encerrando o papo) ou false
 }
 `;
 
