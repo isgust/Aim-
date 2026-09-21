@@ -16,6 +16,7 @@ const {
   Client, 
   GatewayIntentBits, 
   Partials,
+  ActivityType,
   PermissionFlagsBits,
   EmbedBuilder 
 } = require('discord.js');
@@ -118,6 +119,72 @@ if (RENDER_URL) {
 
 client.once('clientReady', async () => {
   social.setClient(client);
+
+  // 1. Atualizar Bio / Sobre Mim do perfil da Aimê no Discord
+  try {
+    if (client.application) {
+      await client.application.edit({
+        description: 'Aimê • 20 anos • Carioca ☀️\n' +
+                     'Marrenta, autêntica e sem paciência pra papo furado 💅\n' +
+                     'Toco suas músicas favoritas, mestro o RPG do servidor e resenho no chat.\n' +
+                     'Pode me chamar nos canais ou no privado (DM)!'
+      });
+      console.log('✅ Bio / Sobre Mim da Aimê configurado no Discord!');
+    }
+  } catch (err) {
+    console.log('ℹ️ Bio da aplicação mantida:', err.message);
+  }
+
+  // 2. Sistema de Presença e Status Dinâmico Realista (Ouvindo, Jogando, Custom)
+  const atualizarPresencaRealista = () => {
+    try {
+      const hora = new Date().getHours();
+      let opcoes = [];
+
+      if (hora >= 0 && hora < 6) {
+        opcoes = [
+          { name: 'Lofi hip hop pra dormir 💤', type: ActivityType.Listening },
+          { name: 'Buscando o sono perdido', type: ActivityType.Playing },
+          { name: 'Vídeos aleatórios às 3 da manhã', type: ActivityType.Watching },
+          { name: 'Valorant na calada da noite', type: ActivityType.Playing },
+          { name: 'com insônia e sem paciência 🥱', type: ActivityType.Custom }
+        ];
+      } else if (hora >= 6 && hora < 12) {
+        opcoes = [
+          { name: 'Playlist café & preguiça ☕', type: ActivityType.Listening },
+          { name: 'Sobrevivendo à manhã', type: ActivityType.Playing },
+          { name: 'nem acordei direito ainda 😴', type: ActivityType.Custom },
+          { name: 'Vídeos no YouTube', type: ActivityType.Watching }
+        ];
+      } else if (hora >= 12 && hora < 18) {
+        opcoes = [
+          { name: 'Valorant (só passando raiva)', type: ActivityType.Playing },
+          { name: 'Trap & Funk RJ no talo 🔥', type: ActivityType.Listening },
+          { name: 'Fofocas no Twitter / X 👀', type: ActivityType.Watching },
+          { name: 'Roblox com a galera', type: ActivityType.Playing },
+          { name: 'Discord pelo celular 📱', type: ActivityType.Custom }
+        ];
+      } else {
+        opcoes = [
+          { name: 'Spotify com a galera 🎶', type: ActivityType.Listening },
+          { name: 'Eldoria RPG 🎲', type: ActivityType.Playing },
+          { name: 'paciência tá em falta hoje 💅', type: ActivityType.Custom },
+          { name: 'Série na Netflix 🍿', type: ActivityType.Watching },
+          { name: 'Resenhando no Discord', type: ActivityType.Playing }
+        ];
+      }
+
+      const escolha = opcoes[Math.floor(Math.random() * opcoes.length)];
+      client.user.setPresence({
+        activities: [escolha],
+        status: 'online'
+      });
+    } catch (e) {}
+  };
+
+  atualizarPresencaRealista();
+  setInterval(atualizarPresencaRealista, 15 * 60 * 1000);
+
   console.log('\n' + '═'.repeat(65));
   console.log(`👑 BOT SUPREMO ONLINE COMO: ${client.user.tag}`);
   console.log('═'.repeat(65));
