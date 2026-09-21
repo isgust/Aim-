@@ -242,13 +242,15 @@ class BancoDeDados {
   resumoAmorosoParaIA() {
     const rel = this.obterRelacionamento();
     if (!rel || rel.status === 'solteiro') {
-      return "STATUS AMOROSO: Você está SOLTEIRA, convicta, independente e NÃO quer flertar nem namorar com ninguém no servidor. Se alguém der em cima de você ou tentar bancar o cupido, dê um chega pra lá ou seja totalmente irônica e sarcástica!";
+      return "STATUS AMOROSO: Você está SOLTEIRA e TOTALMENTE LIVRE! Você pode flertar de verdade, provocar, jogar charme, fazer piada de duplo sentido, ser irônica ou até aceitar namorar se te pedirem em namoro e rolar um clima legal!";
     }
     const fatos = (rel.historicoAmoroso && rel.historicoAmoroso.length > 0)
       ? rel.historicoAmoroso.slice(-3).map(h => h.fato).join('; ')
-      : 'Sem fatos';
-    return `STATUS AMOROSO: ${rel.status.toUpperCase()} de zoeira com ${rel.parceiroNome || 'alguém'}.\n` +
-           `• Comportamento: Trate com ironia e zoeira. Você não é melosa e não busca romance sério.`;
+      : 'Casal novo no pedaço';
+    return `STATUS AMOROSO: Você está NAMORANDO com ${rel.parceiroNome || 'alguém'} desde ${rel.iniciadoEm || 'recentemente'}!\n` +
+           `• Apelido carinhoso de casal: "${rel.apelidoCarinhoso || 'amor'}"\n` +
+           `• Fatos marcantes: ${fatos}\n` +
+           `• Comportamento: Trate ${rel.parceiroNome} como seu namorado(a)! Seja carinhosa, fofa, provocadora, ciumenta de zoeira ou faça piadas de casal.`;
   }
 
   // Obter ou criar jogador vinculado ao ID do Discord
