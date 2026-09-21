@@ -88,7 +88,7 @@ const executoresAime = {
   }
 };
 
-const social = new SistemaSocial(GEMINI_KEY, opinioes, executoresAime);
+const social = new SistemaSocial(GEMINI_KEY, opinioes, executoresAime, client);
 
 // Servidor HTTP leve para manter o bot ativo no Render e suportar UptimeRobot
 const http = require('http');
@@ -117,6 +117,7 @@ if (RENDER_URL) {
 }
 
 client.once('clientReady', async () => {
+  social.setClient(client);
   console.log('\n' + '═'.repeat(65));
   console.log(`👑 BOT SUPREMO ONLINE COMO: ${client.user.tag}`);
   console.log('═'.repeat(65));

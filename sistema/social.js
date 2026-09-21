@@ -8,7 +8,7 @@ const analytics = require('./analytics');
 const banco = require('./banco');
 
 class SistemaSocial {
-  constructor(apiKey, sistemaOpinioes, executores = {}) {
+  constructor(apiKey, sistemaOpinioes, executores = {}, client = null) {
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ 
       model: 'gemini-flash-lite-latest',
@@ -16,6 +16,7 @@ class SistemaSocial {
     });
     this.opinioes = sistemaOpinioes;
     this.executores = executores;
+    this.client = client;
     this.buffersCanais = new Map(); // canalId -> [ { autor, texto, hora } ]
     this.conversasAtivas = new Map(); // canalId -> { userId, timestamp, turnos }
     this.ultimasMensagensEnviadas = []; // buffer anti-repetição de mensagens
@@ -92,6 +93,69 @@ class SistemaSocial {
   obterContextoRecente(channelId) {
     const buffer = this.buffersCanais.get(channelId) || [];
     return buffer.map(m => `[${m.hora}] ${m.autor}: ${m.texto}`).join('\n');
+  }
+
+  setClient(client) {
+    this.client = client;
+  }
+
+  // Busca o histórico real de mensagens nos canais de texto do servidor para saber o que realmente aconteceu
+  async obterHistoricoTrocaMensagensServidor(termoFoco = null) {
+    if (!this.client || !this.client.guilds) return '';
+
+    let linhas = [];
+    try {
+      for (const guild of this.client.guilds.cache.values()) {
+        const canaisTexto = guild.channels.cache.filter(c => 
+          c.isTextBased() && 
+          !c.isVoiceBased() && 
+          (c.name.includes('geral') || c.name.includes('chat') || c.name.includes('resenha') || c.name.includes('conversa') || c.name.includes('bate-papo'))
+        );
+
+        for (const canal of canaisTexto.values()) {
+          try {
+            const msgs = await canal.messages.fetch({ limit: 60 });
+            if (!msgs || msgs.size === 0) continue;
+
+            const ordenadas = Array.from(msgs.values()).reverse();
+            for (const m of ordenadas) {
+              if (!m.content && (!m.attachments || m.attachments.size === 0)) continue;
+              const autorNome = m.member?.displayName || m.author.globalName || m.author.username;
+              const hora = m.createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              
+              // Limpa menções para nomes reais legíveis
+              let texto = m.cleanContent || m.content;
+              if (m.mentions && m.mentions.users) {
+                for (const [id, u] of m.mentions.users) {
+                  const nome = (guild.members.cache.get(id)?.displayName) || u.globalName || u.username;
+                  texto = texto.replace(new RegExp(`<@!?${id}>`, 'g'), `@${nome}`);
+                }
+              }
+
+              linhas.push(`[${hora}] [#${canal.name}] ${autorNome}: ${texto}`);
+            }
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.error('[Social] Erro ao buscar histórico do servidor:', e.message);
+    }
+
+    if (linhas.length === 0) return '';
+
+    // Se houver termo em foco (ex: "alessandra", "ale", nome de alguém), filtra as mensagens relevantes dessa pessoa ou sobre ela
+    if (termoFoco && termoFoco.length >= 2) {
+      const termoLower = termoFoco.toLowerCase();
+      const relevantes = linhas.filter(l => l.toLowerCase().includes(termoLower));
+      if (relevantes.length > 0) {
+        return `MENSAGENS REAIS RECENTES NO SERVIDOR ENVOLVENDO "${termoFoco}":\n` + 
+               relevantes.slice(-30).join('\n') + 
+               '\n\nOUTRAS MENSAGENS RECENTES DO SERVIDOR:\n' + 
+               linhas.slice(-15).join('\n');
+      }
+    }
+
+    return `MENSAGENS REAIS RECENTES DO SERVIDOR (ÚLTIMAS CONVERSAS NO GERAL):\n` + linhas.slice(-35).join('\n');
   }
 
   // Inicia digitação contínua em segundo plano enquanto processa
@@ -323,6 +387,44 @@ class SistemaSocial {
         }
       }
 
+      // 1. Resolução completa e legível de menções @usuario na mensagem
+      let conteudoLegivel = message.cleanContent || message.content || '';
+      let blocoMencoes = '';
+      let termoFoco = null;
+
+      if (message.mentions && message.mentions.users && message.mentions.users.size > 0) {
+        const linhasMencoes = [];
+        for (const [id, u] of message.mentions.users) {
+          const mem = message.guild ? message.guild.members.cache.get(id) : null;
+          const apelido = mem ? mem.displayName : (u.globalName || u.username);
+          conteudoLegivel = conteudoLegivel.replace(new RegExp(`<@!?${id}>`, 'g'), `@${apelido}`);
+          linhasMencoes.push(`- @${apelido} (Nome de usuário: @${u.username}, ID: ${id})`);
+          if (!termoFoco) termoFoco = apelido || u.username;
+        }
+        blocoMencoes = `PESSOAS MENCIONADAS / CITADAS NESTA MENSAGEM:\n${linhasMencoes.join('\n')}\n`;
+      }
+
+      // Se não teve @ menção explícita com tag, tenta detectar nomes citados no texto (ex: "alessandra", "ale", "gustavo", etc.)
+      if (!termoFoco) {
+        const textoLower = (message.content || '').toLowerCase();
+        const usuariosStats = Object.values(banco.dados.estatisticas?.usuarios || {});
+        for (const u of usuariosStats) {
+          if (textoLower.includes(u.nome.toLowerCase()) || (u.apelido && textoLower.includes(u.apelido.toLowerCase()))) {
+            termoFoco = u.apelido || u.nome;
+            break;
+          }
+        }
+        if (!termoFoco) {
+          const matchNome = textoLower.match(/(?:com|sobre|do|da|de|a|o)\s+([a-záàâãéèêíïóôõöúçñ]{3,})/i);
+          if (matchNome && matchNome[1]) {
+            termoFoco = matchNome[1];
+          }
+        }
+      }
+
+      // 2. Busca histórico real de mensagens e conversas nos canais do servidor
+      const historicoServidor = await this.obterHistoricoTrocaMensagensServidor(termoFoco);
+
       const tempoAtrasTexto = infoConversa.tempoDesdeAnteriorMs 
         ? this.formatarTempoDecorrido(infoConversa.tempoDesdeAnteriorMs)
         : null;
@@ -353,12 +455,22 @@ SITUAÇÃO DA CONVERSA:
 ${isDM ? '- DICA PARA DM PRIVADA: No privado a conversa é de boa, pessoal e sem plateia. Você pode fofocar, falar do server, desabafar, tirar onda ou flertar se pintar clima!' : ''}
 
 MENSAGEM QUE ${nomeAutor} ACABOU DE MANDAR PARA VOCÊ:
-"${message.content || (temImagem ? '[Enviou uma imagem no chat]' : '')}"
+"${conteudoLegivel || (temImagem ? '[Enviou uma imagem no chat]' : '')}"
+
+${blocoMencoes}
 
 ${temImagem ? '🚨 ATENÇÃO: O usuário mandou uma foto/print/meme anexada! Observe e comente ou reaja sobre a foto!' : ''}
 
-HISTÓRICO RECENTE DO CHAT:
+HISTÓRICO RECENTE DESTE CANAL/DM:
 ${contexto || 'Nenhuma mensagem recente antes desta'}
+
+${historicoServidor ? `
+============================================================
+HISTÓRICO REAL DE MENSAGENS E CONVERSAS NO SERVIDOR:
+(Aqui estão as mensagens reais que você e os membros mandaram no servidor! Use isso para saber exatamente o que aconteceu de verdade)
+${historicoServidor}
+============================================================
+` : ''}
 
 ${resumoOpinioes}
 
@@ -423,6 +535,19 @@ SUAS DIRETRIZES DE PERSONALIDADE REAL & LIVRE:
 9. TAMANHO DA RESPOSTA:
    - Mande preferencialmente APENAS 1 MENSAGEM curta e direta de chat de Discord (ou no máximo 2 se for uma risada + comentário).
    - NUNCA repita a mesma frase nem mande variações da mesma ideia.
+
+10. BASEIE-SE EM FATOS REAIS DO SERVIDOR (PROIBIDO ALUCINAR TRETAS OU ACONTECIMENTOS FALSOS):
+    - Se perguntarem sobre fofocas, brigas, conversas ou tretas com alguém do servidor (ex: "e aquela treta com a alessandra?", "o que o fulano falou?"):
+      * OLHE O HISTÓRICO REAL DE MENSAGENS DO SERVIDOR fornecido acima!
+      * Se houver mensagens reais mostrando uma discussão, zoação ou treta entre você e a pessoa, CITE EXATAMENTE o que ela falou e o que você respondeu ("Pô Rocha, tu viu né? A Alê mandou no geral que [fato real], aí eu mandei ela baixar a bola e falei [fato real]").
+      * NUNCA invente histórias vazias do nada ("ela soltou umas gracinhas que não me desceram", "aquele bagulho da semana passada", "tu que lute pra saber dos detalhes")!
+      * Se você olhar o histórico e NÃO encontrar nenhuma briga com a pessoa, ou se tiver sido apenas uma conversa normal, SEJA 100% SINCERA E TRANSPARENTE:
+        - "Ué, que treta? Eu não tretei com ela não pô, tá doido? kkkk"
+        - "Pera aí, que treta é essa? A gente só falou sobre [assunto real das mensagens], não teve briga nenhuma!"
+        - "Menino, tu tá inventando fofoca onde não tem kkkk a gente nem brigou!"
+
+11. IDENTIFICAÇÃO DE USUÁRIOS E @MENÇÕES:
+    - Quando o usuário mencionar alguém (@Fulano ou falar de um membro), olhe a lista de PESSOAS MENCIONADAS / CITADAS acima para saber exatamente quem é a pessoa (nome e apelido dela). Trate pelo nome/apelido correto e reconheça quem ela é no servidor!
 
 Retorne em formato JSON:
 {
