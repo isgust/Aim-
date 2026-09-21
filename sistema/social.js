@@ -369,7 +369,7 @@ SUAS DIRETRIZES DE PERSONALIDADE REAL & LIVRE:
 Retorne em formato JSON:
 {
   "decisao": "falar" ou "apenas_reagir" ou "ignorar",
-  "emojiReacao": "😂" (opcional),
+  "emojiReacao": null ou "😂" (apenas se a decisao for "apenas_reagir", NUNCA use reação de emoji quando for falar no chat),
   "delayHumanoSegundos": 1 a 3,
   "mensagens": ["Sua resposta direta aqui"],
   "acaoEspecial": null ou { "tipo": "tocar_musica" ou "agir_rpg", "busca": "nome musica", "detalhe": "acao rpg" },
@@ -430,11 +430,7 @@ Retorne em formato JSON:
         return;
       }
 
-      // Decisão 3: Falar no chat
-      if (dados.emojiReacao && typeof message.react === 'function') {
-        message.react(dados.emojiReacao).catch(() => {});
-      }
-
+      // Decisão 3: Falar no chat (apenas responde com a mensagem normal, sem reagir com emoji)
       if (dados.delayHumanoSegundos && dados.delayHumanoSegundos > 0) {
         const tempoEspera = Math.min(4000, Math.max(1000, dados.delayHumanoSegundos * 1000));
         await new Promise(r => setTimeout(r, tempoEspera));
