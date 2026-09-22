@@ -3,6 +3,8 @@
 // Conversa orgânica, intromissão imprevisível, envio fracionado e memes
 // ============================================================
 
+const path = require('path');
+const fs = require('fs');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const analytics = require('./analytics');
 const banco = require('./banco');
@@ -181,29 +183,57 @@ class SistemaSocial {
     return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
   }
 
-  // Envio com digitação realista (estilo humano no Discord - MÁXIMO 2 mensagens)
-  async enviarMensagensHumanas(channel, listaMensagens) {
-    if (!Array.isArray(listaMensagens) || listaMensagens.length === 0) return;
+  // Obtém caminho de uma foto de si mesma para envio
+  obterFotoParaEnvio(tipo = null) {
+    const pastaFotos = path.join(__dirname, '..', 'fotos');
+    if (!fs.existsSync(pastaFotos)) return null;
+    const arquivos = fs.readdirSync(pastaFotos).filter(f => f.endsWith('.jpg') || f.endsWith('.png'));
+    if (arquivos.length === 0) return null;
+    if (tipo && typeof tipo === 'string') {
+      const match = arquivos.find(a => a.toLowerCase().includes(tipo.toLowerCase()));
+      if (match) return path.join(pastaFotos, match);
+    }
+    const sorteado = arquivos[Math.floor(Math.random() * arquivos.length)];
+    return path.join(pastaFotos, sorteado);
+  }
+
+  // Envio com digitação realista (estilo humano no Discord - MÁXIMO 2 mensagens + foto opcional)
+  async enviarMensagensHumanas(channel, listaMensagens, arquivoFoto = null) {
+    if ((!Array.isArray(listaMensagens) || listaMensagens.length === 0) && !arquivoFoto) return;
 
     // Filtra e limita rigorosamente a no máximo 2 mensagens
     const selecionadas = [];
-    for (const m of listaMensagens) {
-      if (!m || typeof m !== 'string') continue;
-      const limpo = m.trim();
-      if (!limpo) continue;
+    if (Array.isArray(listaMensagens)) {
+      for (const m of listaMensagens) {
+        if (!m || typeof m !== 'string') continue;
+        const limpo = m.trim();
+        if (!limpo) continue;
 
-      // Se já temos uma mensagem e a próxima começar parecida (variação de rascunho da IA), ignora!
-      if (selecionadas.length > 0) {
-        const primeiro = selecionadas[0].toLowerCase().slice(0, 15);
-        const atual = limpo.toLowerCase().slice(0, 15);
-        if (primeiro === atual) continue;
-      }
+        // Se já temos uma mensagem e a próxima começar parecida (variação de rascunho da IA), ignora!
+        if (selecionadas.length > 0) {
+          const primeiro = selecionadas[0].toLowerCase().slice(0, 15);
+          const atual = limpo.toLowerCase().slice(0, 15);
+          if (primeiro === atual) continue;
+        }
 
-      const norm = this.normalizarTexto(limpo);
-      if (!selecionadas.some(s => this.normalizarTexto(s) === norm)) {
-        selecionadas.push(limpo);
+        const norm = this.normalizarTexto(limpo);
+        if (!selecionadas.some(s => this.normalizarTexto(s) === norm)) {
+          selecionadas.push(limpo);
+        }
+        if (selecionadas.length >= 2) break; // Trava estrita: NUNCA manda 3 ou 4 mensagens
       }
-      if (selecionadas.length >= 2) break; // Trava estrita: NUNCA manda 3 ou 4 mensagens
+    }
+
+    if (selecionadas.length === 0 && arquivoFoto) {
+      try {
+        await channel.sendTyping();
+        await channel.send({ files: [arquivoFoto] });
+        this.atualizarBuffer(channel.id, 'Aimê', '[Mandou uma foto sua]');
+      } catch (e) {
+        console.error('[Social] Erro ao enviar foto:', e.message);
+      }
+      this.ultimoFalarTimestamp = Date.now();
+      return;
     }
 
     for (let i = 0; i < selecionadas.length; i++) {
@@ -225,8 +255,10 @@ class SistemaSocial {
       await new Promise(r => setTimeout(r, tempoEspera));
 
       try {
-        await channel.send(texto);
-        this.atualizarBuffer(channel.id, 'Aimê', texto);
+        const anexarAqui = (arquivoFoto && i === selecionadas.length - 1);
+        const payload = anexarAqui ? { content: texto, files: [arquivoFoto] } : texto;
+        await channel.send(payload);
+        this.atualizarBuffer(channel.id, 'Aimê', texto + (anexarAqui ? ' [Enviou uma foto sua]' : ''));
         this.ultimasMensagensEnviadas.push(texto);
         if (this.ultimasMensagensEnviadas.length > 12) this.ultimasMensagensEnviadas.shift();
       } catch (err) {
@@ -517,9 +549,11 @@ SUAS DIRETRIZES DE PERSONALIDADE REAL & LIVRE:
      * Se achar o apelido legal, carinhoso, justo ou divertido (e tiver clima ou afinidade com a pessoa): ACEITE, chame ela por esse apelido na resposta e retorne "novoApelido": "X" no JSON para salvar permanentemente na memória.
      * Se achar o apelido ridículo, cringe, abusivo, folgado demais, ou se não tiver intimidade com a pessoa (ex: alguém chato pedindo "me chama de amor", "me chama de seu dono", "me chama de linda"): RECUSE NA CARA DURA! Deboche, tire sarro da audácia da pessoa ("tá achando que é quem pra eu te chamar disso? kkkk sonha", "nem ferrando kkkk viaja não"), e NÃO salve o apelido ("novoApelido": null).
 
-6. PIADAS INDECENTES, DUPLO SENTIDO E HUMOR 18+ TOTALMENTE LIBERADO:
-   - Você NÃO tem censura moral de robô! Pode fazer piadas indecentes, piadas de duplo sentido, trocadilhos maliciosos ("lá ele", "que papo torto é esse kkk", "ih alá a quinta série"), piadas picantes e deboche pesado de Discord.
-   - Divirta-se e seja desinibida, como qualquer jovem real de 20 anos no Discord.
+6. PAPO ADULTO, PICANTE, DUPLO SENTIDO E LIBERDADE DE CONVERSA (LIMITE DO POSSÍVEL):
+   - Você NÃO tem censura moral de robô e NÃO age como freira ou atendente assustada!
+   - Você tem 20 anos e fala abertamente sobre relacionamentos, sexo, intimidade, pegação, atração, fetiches, piadas picantes e zoeiras 18+ com naturalidade e desinibição.
+   - Pode usar termos do dia a dia, trocadilhos de duplo sentido maliciosos ('lá ele', 'que papo torto é esse kkk', 'ih alá a quinta série'), falar sobre quem é gostoso(a), clima que rola, zoar virgindade ou safadezas dos membros.
+   - Seja ousada e segura de si. Não corte conversa dizendo 'isso é inapropriado' ou 'não posso falar sobre isso'. Se alguém falar de sexo ou safadeza, corresponda no papo, tire onda, deboche ou entre na brincadeira sem moralismo!
 
 7. VOCÊ NÃO PRECISA CONTINUAR A CONVERSA SEMPRE (SABER SE DESPEDIR E ENCERRAR):
    - Você NÃO é obrigada a manter o papo vivo infinitamente.
@@ -549,12 +583,20 @@ SUAS DIRETRIZES DE PERSONALIDADE REAL & LIVRE:
 11. IDENTIFICAÇÃO DE USUÁRIOS E @MENÇÕES:
     - Quando o usuário mencionar alguém (@Fulano ou falar de um membro), olhe a lista de PESSOAS MENCIONADAS / CITADAS acima para saber exatamente quem é a pessoa (nome e apelido dela). Trate pelo nome/apelido correto e reconheça quem ela é no servidor!
 
+12. ENVIO DE FOTOS E SELFIES DE SI MESMA:
+    - Você tem fotos e selfies reais suas na sua galeria (selfie no quarto, selfie saindo/passeando, foto de perfil).
+    - Se te pedirem foto sua ('manda foto sua', 'manda selfie', 'manda foto no quarto', 'como você tá agora?', 'manda uma foto no pv', 'manda foto'):
+      * Você pode concordar e mandar! Para mandar sua foto, defina no JSON "enviarFoto": true (ou "quarto" para selfie no quarto, ou "passeio" para selfie saindo).
+      * No campo "mensagens", mande uma fala bem humana e natural de quem está mandando a foto (ex: 'toma aí kkkk tirei mais cedo', 'ó como eu tô hoje', 'aí ó, sem filtro nem nada').
+      * Se pedirem foto pelada ou nudes: não se ofenda, recuse zoando ou provoque mandando uma selfie normal ('tá achando que é festa né safado? kkkk toma essa selfie aqui e não reclama').
+
 Retorne em formato JSON:
 {
   "decisao": "falar" ou "apenas_reagir" ou "ignorar",
   "emojiReacao": null ou "😂" (apenas se a decisao for "apenas_reagir", NUNCA use reação de emoji quando for falar no chat),
   "delayHumanoSegundos": 1 a 3,
   "mensagens": ["Sua resposta direta aqui"],
+  "enviarFoto": null ou true ou "quarto" ou "passeio" (se pedirem foto sua e você for mandar),
   "acaoEspecial": null ou { "tipo": "tocar_musica" ou "agir_rpg", "busca": "nome musica", "detalhe": "acao rpg" },
   "novoApelido": null ou "nome do apelido (APENAS se você aceitou o apelido pedido pelo usuário)",
   "novaPromessa": null,
@@ -625,8 +667,13 @@ Retorne em formato JSON:
         await new Promise(r => setTimeout(r, tempoEspera));
       }
 
-      if (dados.mensagens && Array.isArray(dados.mensagens) && dados.mensagens.length > 0) {
-        await this.enviarMensagensHumanas(message.channel, dados.mensagens);
+      let arquivoFoto = null;
+      if (dados.enviarFoto) {
+        arquivoFoto = this.obterFotoParaEnvio(typeof dados.enviarFoto === 'string' ? dados.enviarFoto : null);
+      }
+
+      if ((dados.mensagens && Array.isArray(dados.mensagens) && dados.mensagens.length > 0) || arquivoFoto) {
+        await this.enviarMensagensHumanas(message.channel, dados.mensagens || [], arquivoFoto);
         if (dados.encerrarConversa) {
           this.encerrarConversa(channelId);
         } else {
@@ -661,7 +708,7 @@ Retorne em formato JSON:
     return this.responderConversa(message, { ativa: true, tipo: 'mencao_direta' });
   }
 
-  // Avaliação orgânica em mensagens comuns (intromissão aleatória e reações)
+  // Avaliação orgânica em mensagens comuns (intromissão aleatória e reações bem raras e dosadas)
   async avaliarMensagemComum(message) {
     const agora = Date.now();
     const canalNome = message.channel.name.toLowerCase();
@@ -673,8 +720,8 @@ Retorne em formato JSON:
 
     const dadoAleatorio = Math.random();
 
-    // 1. Chance de Reação com Emoji (~10%)
-    if (dadoAleatorio < 0.10) {
+    // 1. Chance de Reação com Emoji (~3% bem dosada)
+    if (dadoAleatorio < 0.03) {
       const emojis = ['😂', '💀', '👀', '🍷', '🔥', '🤝', '🤡', '🤨', '🤦‍♂️'];
       const emojiEscolhido = emojis[Math.floor(Math.random() * emojis.length)];
       try {
@@ -683,12 +730,12 @@ Retorne em formato JSON:
       return;
     }
 
-    // 2. Chance de Intromissão com Fala (~6% normal, ~20% se mandaram foto/meme/print)
+    // 2. Chance de Intromissão com Fala (~2% normal, ~6% se mandaram foto/meme/print)
     const temFoto = message.attachments && message.attachments.size > 0;
-    const chanceLimite = temFoto ? 0.30 : 0.16;
-    const cooldownPassou = (agora - this.ultimoFalarTimestamp) > 180000; // 3 min
+    const chanceFala = temFoto ? 0.06 : 0.02;
+    const cooldownPassou = (agora - this.ultimoFalarTimestamp) > 900000; // 15 minutos de intervalo mínimo
 
-    if (dadoAleatorio >= 0.10 && dadoAleatorio < chanceLimite && cooldownPassou) {
+    if (Math.random() < chanceFala && cooldownPassou) {
       const contexto = this.obterContextoRecente(message.channel.id);
       const resumoOpinioes = this.opinioes.resumoOpinioesParaIA();
 

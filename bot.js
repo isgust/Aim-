@@ -196,9 +196,9 @@ client.once('clientReady', async () => {
   console.log('═'.repeat(65) + '\n');
 
   // Sistema de Espontaneidade Independente e Orgânica por Servidor
-  // Cada servidor tem seu próprio temporizador com intervalo aleatório variável (nunca no mesmo horário)
+  // Intervalo longo e respeitoso: entre 4 a 8 horas (240 a 480 minutos), apenas se o chat estiver quieto há mais de 2 horas
   const agendarEspontaneidadeGuild = (guild) => {
-    const minutosAleatorios = Math.floor(Math.random() * (150 - 40 + 1)) + 40;
+    const minutosAleatorios = Math.floor(Math.random() * (480 - 240 + 1)) + 240;
     const ms = minutosAleatorios * 60 * 1000;
 
     setTimeout(async () => {
@@ -210,7 +210,7 @@ client.once('clientReady', async () => {
           const agora = Date.now();
           const ultimaMsg = social.ultimaMensagemCanalTimestamp.get(canalGeral.id) || 0;
           const minutosSemFalar = (agora - ultimaMsg) / 60000;
-          if (minutosSemFalar >= 35) {
+          if (minutosSemFalar >= 120) {
             await social.puxarAssuntoOcioso(canalGeral);
           }
         }
