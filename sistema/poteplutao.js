@@ -220,183 +220,43 @@ class SistemaPotePlutao {
 
   // --- RENDERIZADORES DE IMAGEM DINÂMICA (SHARP) ---
 
-  async renderizarPostSabor(sabor, tituloCustom = null, subtituloCustom = null) {
+  // --- RENDERIZADORES DE IMAGEM DINÂMICA (SHARP) ---
+  // Estilo minimalista e fiel ao feed oficial do Instagram da PotePlutão
+
+  async renderizarPostSabor(sabor, tagCustom = null, tituloCustom = null) {
     const fotoPotPath = path.join(FOTOS_DIR, sabor.foto);
     let potDataUri = '';
     if (fs.existsSync(fotoPotPath)) {
       const potBase64 = fs.readFileSync(fotoPotPath).toString('base64');
-      potDataUri = `data:image/jpeg;base64,${potBase64}`;
+      potDataUri = 'data:image/jpeg;base64,' + potBase64;
     }
 
-    const titulo = escapeXml(tituloCustom || sabor.nome);
-    const subtitulo = escapeXml(subtituloCustom || `${sabor.badge} • Cremosidade Única`);
-    const descricao = escapeXml(sabor.descricao);
-    const detalhes = escapeXml(sabor.detalhes);
+    const tag = escapeXml(tagCustom || sabor.badge || 'EDIÇÃO LIMITADA').toUpperCase();
+    const titulo = escapeXml(tituloCustom || sabor.nomeCurto || sabor.nome);
 
     const svg = `
 <svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <clipPath id="potClip">
-      <circle cx="540" cy="495" r="230" />
+    <clipPath id="potCircle">
+      <circle cx="540" cy="510" r="230" />
     </clipPath>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="rgba(0,0,0,0.6)" />
+    <filter id="potGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="30" flood-color="rgba(0,0,0,0.6)" />
     </filter>
   </defs>
 
-  <!-- Top Badge -->
-  <rect x="365" y="85" width="350" height="42" rx="21" fill="#A8E6CF" fill-opacity="0.15" stroke="#A8E6CF" stroke-width="1.5" />
-  <text x="540" y="112" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="bold" fill="#A8E6CF" text-anchor="middle" letter-spacing="2">🪐 CREME GELADO ARTESANAL</text>
+  <!-- Tag Top -->
+  <text x="540" y="160" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="bold" fill="#A8E6CF" letter-spacing="4" text-anchor="middle">${tag}</text>
 
-  <!-- Main Headline -->
-  <text x="540" y="190" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" text-anchor="middle">${titulo}</text>
-  <text x="540" y="230" font-family="Arial, Helvetica, sans-serif" font-size="22" fill="#A8E6CF" text-anchor="middle">${subtitulo}</text>
+  <!-- Title -->
+  <text x="540" y="240" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="900" fill="#FFFFFF" text-anchor="middle">${titulo}</text>
 
-  <!-- Product Ring Frame -->
-  <circle cx="540" cy="495" r="248" fill="none" stroke="${sabor.cor || '#A8E6CF'}" stroke-width="5" stroke-opacity="0.95" filter="url(#shadow)" />
-  <circle cx="540" cy="495" r="240" fill="#1B2A4A" />
-
-  ${potDataUri ? `<image href="${potDataUri}" x="310" y="265" width="460" height="460" preserveAspectRatio="xMidYMid slice" clip-path="url(#potClip)" />` : ''}
-
-  <!-- Floating Tags -->
-  <g transform="translate(180, 480)">
-    <rect x="0" y="0" width="160" height="46" rx="23" fill="#1B2A4A" stroke="#A8E6CF" stroke-width="1.5" />
-    <text x="80" y="29" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="bold" fill="#FFFFFF" text-anchor="middle">❄️ -18°C</text>
-  </g>
-
-  <g transform="translate(740, 480)">
-    <rect x="0" y="0" width="160" height="46" rx="23" fill="#1B2A4A" stroke="${sabor.cor || '#A8E6CF'}" stroke-width="1.5" />
-    <text x="80" y="29" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="bold" fill="${sabor.cor || '#A8E6CF'}" text-anchor="middle">🪙 ${escapeXml(sabor.preco)}</text>
-  </g>
-
-  <!-- Description Text -->
-  <text x="540" y="780" font-family="Arial, Helvetica, sans-serif" font-size="23" fill="#FFFFFF" text-anchor="middle" font-weight="bold">${descricao}</text>
-  <text x="540" y="814" font-family="Arial, Helvetica, sans-serif" font-size="19" fill="rgba(255,255,255,0.7)" text-anchor="middle">${detalhes}</text>
-
-  <!-- CTA Button -->
-  <rect x="240" y="855" width="600" height="66" rx="33" fill="#A8E6CF" filter="url(#shadow)" />
-  <text x="540" y="897" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" fill="#062338" text-anchor="middle">PEÇA NO WHATSAPP: (98) 99193-9476</text>
-
-  <!-- Footer Tagline (Positioned above background brand stamp) -->
-  <text x="540" y="948" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="bold" fill="rgba(255,255,255,0.7)" text-anchor="middle">Jardim São Cristóvão • São Luís - MA</text>
+  <!-- Product Image Container -->
+  <circle cx="540" cy="510" r="235" fill="none" stroke="#A8E6CF" stroke-width="4" stroke-opacity="0.6" filter="url(#potGlow)" />
+  ${potDataUri ? `<image href="${potDataUri}" x="310" y="280" width="460" height="460" preserveAspectRatio="xMidYMid slice" clip-path="url(#potCircle)" />` : ''}
 </svg>`;
 
     const outPath = path.join(FOTOS_DIR, `post_${sabor.id}_${Date.now()}.png`);
-    await sharp(BG_TEAL)
-      .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
-      .png()
-      .toFile(outPath);
-
-    return outPath;
-  }
-
-  async renderizarPostDiferenciais(dados = {}) {
-    const titulo = escapeXml(dados.titulo || 'Cremosidade Única');
-    const subtitulo = escapeXml(dados.subtitulo || 'Receita própria e autoral • Servido trincando a -18°C');
-    const itens = dados.itens || [
-      { icone: '❄️', titulo: 'Trincando de Gelado', desc: 'Servido a -18°C, perfeito pro calor intenso de São Luís' },
-      { icone: '☁️', titulo: 'Textura Aerada (Gravidade Zero)', desc: 'Leveza inacreditável que derrete suave na boca' },
-      { icone: '🤝', titulo: 'Feito pra Revenda & Varejo', desc: 'Potes de 120ml por R$ 5,00 com alta margem para comércios' }
-    ];
-
-    const itensSvg = itens.map((item, idx) => `
-    <g transform="translate(0, ${idx * 105})">
-      <circle cx="30" cy="30" r="20" fill="#A8E6CF" fill-opacity="0.2" />
-      <text x="30" y="38" font-family="Arial, Helvetica, sans-serif" font-size="22" text-anchor="middle">${escapeXml(item.icone)}</text>
-      <text x="70" y="27" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="bold" fill="#FFFFFF">${escapeXml(item.titulo)}</text>
-      <text x="70" y="55" font-family="Arial, Helvetica, sans-serif" font-size="19" fill="rgba(255,255,255,0.72)">${escapeXml(item.desc)}</text>
-    </g>`).join('');
-
-    const svg = `
-<svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B2A4A" stop-opacity="0.84" />
-      <stop offset="100%" stop-color="#0E1B33" stop-opacity="0.94" />
-    </linearGradient>
-    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="rgba(0,0,0,0.6)" />
-    </filter>
-  </defs>
-
-  <!-- Card container -->
-  <rect x="90" y="90" width="900" height="880" rx="36" fill="url(#cardGrad)" stroke="#A8E6CF" stroke-width="2" stroke-opacity="0.3" filter="url(#cardShadow)" />
-
-  <!-- Badge Top -->
-  <rect x="365" y="140" width="350" height="44" rx="22" fill="#A8E6CF" fill-opacity="0.15" stroke="#A8E6CF" stroke-width="1.5" />
-  <text x="540" y="169" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="bold" fill="#A8E6CF" text-anchor="middle" letter-spacing="2">CREMES ARTESANAIS ULTRAGELADOS</text>
-
-  <!-- Headline -->
-  <text x="540" y="260" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="900" fill="#FFFFFF" text-anchor="middle">${titulo}</text>
-  <text x="540" y="305" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#A8E6CF" text-anchor="middle">${subtitulo}</text>
-
-  <!-- Items list -->
-  <g transform="translate(160, 365)">
-    ${itensSvg}
-  </g>
-
-  <!-- CTA Box Bottom -->
-  <rect x="220" y="740" width="640" height="70" rx="35" fill="#A8E6CF" />
-  <text x="540" y="784" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="900" fill="#062338" text-anchor="middle">PEÇA NO WHATSAPP: (98) 99193-9476</text>
-
-  <!-- Footer Tagline -->
-  <text x="540" y="855" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="bold" fill="#FFFFFF" text-anchor="middle">Pote<tspan fill="#A8E6CF">Plutão</tspan> • Sobremesas de São Luís - MA</text>
-</svg>`;
-
-    const outPath = path.join(FOTOS_DIR, `post_diferenciais_${Date.now()}.png`);
-    await sharp(BG_TEAL)
-      .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
-      .png()
-      .toFile(outPath);
-
-    return outPath;
-  }
-
-  async renderizarPostDepoimento(depoimento = {}) {
-    const texto = escapeXml(depoimento.texto || 'Melhor sobremesa gelada de São Luís! A textura aerada é surreal e no meu estabelecimento vende tudo em poucas horas.');
-    const autor = escapeXml(depoimento.autor || 'Carlos Ribeiro • Café & Bistrô');
-
-    const svg = `
-<svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="bubbleShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="12" stdDeviation="24" flood-color="rgba(0,0,0,0.5)" />
-    </filter>
-  </defs>
-
-  <!-- Badge Top -->
-  <rect x="365" y="110" width="350" height="44" rx="22" fill="#A8E6CF" fill-opacity="0.15" stroke="#A8E6CF" stroke-width="1.5" />
-  <text x="540" y="139" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="bold" fill="#A8E6CF" text-anchor="middle" letter-spacing="2">AVALIAÇÕES &amp; CLIENTES</text>
-
-  <text x="540" y="235" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="900" fill="#FFFFFF" text-anchor="middle">O que dizem sobre nós</text>
-
-  <!-- Speech Bubble Container -->
-  <g transform="translate(140, 290)" filter="url(#bubbleShadow)">
-    <rect x="0" y="0" width="800" height="420" rx="36" fill="#1B2A4A" stroke="#A8E6CF" stroke-width="2" stroke-opacity="0.4" />
-    
-    <!-- Speech bubble triangle tail -->
-    <polygon points="400,420 370,460 430,420" fill="#1B2A4A" />
-
-    <!-- 5 Gold Stars -->
-    <text x="400" y="90" font-family="Arial, Helvetica, sans-serif" font-size="38" fill="#FFD166" text-anchor="middle">★★★★★</text>
-
-    <!-- Quote -->
-    <text x="400" y="180" font-family="Arial, Helvetica, sans-serif" font-size="28" font-style="italic" fill="#FFFFFF" text-anchor="middle" width="700">
-      <tspan x="400" dy="0">“${texto}”</tspan>
-    </text>
-
-    <!-- Author Line -->
-    <text x="400" y="320" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="bold" fill="#A8E6CF" text-anchor="middle">${autor}</text>
-  </g>
-
-  <!-- CTA Box Bottom -->
-  <rect x="240" y="820" width="600" height="66" rx="33" fill="#A8E6CF" />
-  <text x="540" y="862" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" fill="#062338" text-anchor="middle">PROVE HOJE: (98) 99193-9476</text>
-
-  <text x="540" y="940" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="bold" fill="rgba(255,255,255,0.7)" text-anchor="middle">Pote<tspan fill="#A8E6CF">Plutão</tspan> • São Luís - MA</text>
-</svg>`;
-
-    const outPath = path.join(FOTOS_DIR, `post_depoimento_${Date.now()}.png`);
     await sharp(BG_WAVES)
       .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
       .png()
@@ -405,68 +265,135 @@ class SistemaPotePlutao {
     return outPath;
   }
 
-  async renderizarPostB2B(dados = {}) {
-    const fotoB2BPath = path.join(FOTOS_DIR, 'parceiro-real.jpg');
-    let b2bDataUri = '';
-    if (fs.existsSync(fotoB2BPath)) {
-      const b2bBase64 = fs.readFileSync(fotoB2BPath).toString('base64');
-      b2bDataUri = `data:image/jpeg;base64,${b2bBase64}`;
+  async renderizarPostDiferenciais(dados = {}) {
+    const tituloPrincipal = escapeXml(dados.titulo || 'Cremes gelados');
+    const subtituloPrincipal = escapeXml(dados.subtitulo || 'ultragelados:');
+    const itens = dados.itens || [
+      { titulo: 'Cremosidade Única', desc: 'Textura aerada e leve como uma nuvem no céu' },
+      { titulo: 'Feito pra Revenda', desc: 'Fornecimento para lanchonetes e restaurantes' },
+      { titulo: 'Zero Gravidade', desc: 'Ponto de revenda no Jardim São Cristóvão' }
+    ];
+
+    const itensSvg = itens.slice(0, 3).map((item, idx) => `
+    <g transform="translate(540, ${400 + idx * 130})">
+      <text x="0" y="0" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="bold" fill="#A8E6CF" text-anchor="middle">${escapeXml(item.titulo)}</text>
+      <text x="0" y="38" font-family="Arial, Helvetica, sans-serif" font-size="21" fill="rgba(255,255,255,0.75)" text-anchor="middle">${escapeXml(item.desc)}</text>
+    </g>`).join('');
+
+    const svg = `
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main Headlines -->
+  <text x="540" y="210" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="900" fill="#FFFFFF" text-anchor="middle">${tituloPrincipal}</text>
+  <text x="540" y="275" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="900" fill="#FFFFFF" text-anchor="middle">${subtituloPrincipal}</text>
+
+  <!-- Items -->
+  ${itensSvg}
+</svg>`;
+
+    const outPath = path.join(FOTOS_DIR, `post_diferenciais_${Date.now()}.png`);
+    await sharp(BG_WAVES)
+      .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
+      .png()
+      .toFile(outPath);
+
+    return outPath;
+  }
+
+  async renderizarPostDepoimento(depoimento = {}) {
+    const texto = escapeXml(depoimento.texto || 'Melhor sobremesa gelada de São Luís! Os clientes adoraram a textura de gravidade zero e trincando de gelado pro calor.');
+    
+    // Procura foto do avatar
+    const avatarPath = path.join(FOTOS_DIR, 'avatar_cliente.jpg');
+    let avatarUri = '';
+    if (fs.existsSync(avatarPath)) {
+      const avatarB64 = fs.readFileSync(avatarPath).toString('base64');
+      avatarUri = 'data:image/jpeg;base64,' + avatarB64;
     }
 
     const svg = `
 <svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <clipPath id="rectClip">
-      <rect x="180" y="270" width="720" height="340" rx="24" />
+    <clipPath id="avatarClip">
+      <circle cx="540" cy="270" r="56" />
     </clipPath>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="rgba(0,0,0,0.6)" />
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="28" flood-color="rgba(0,0,0,0.5)" />
     </filter>
   </defs>
 
-  <!-- Badge Top -->
-  <rect x="365" y="85" width="350" height="42" rx="21" fill="#A8E6CF" fill-opacity="0.15" stroke="#A8E6CF" stroke-width="1.5" />
-  <text x="540" y="112" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="bold" fill="#A8E6CF" text-anchor="middle" letter-spacing="2">PARA RESTAURANTES &amp; PADARIAS</text>
+  <!-- Speech bubble card -->
+  <rect x="150" y="270" width="780" height="450" rx="36" fill="#0D2E42" stroke="#A8E6CF" stroke-width="1.5" stroke-opacity="0.25" filter="url(#cardShadow)" />
 
-  <!-- Title -->
-  <text x="540" y="185" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="900" fill="#FFFFFF" text-anchor="middle">Leve PotePlutão pro seu Comércio!</text>
-  <text x="540" y="225" font-family="Arial, Helvetica, sans-serif" font-size="22" fill="#A8E6CF" text-anchor="middle">A sobremesa que vende sozinha no balcão pós-almoço</text>
+  <!-- Avatar Circle -->
+  <circle cx="540" cy="270" r="58" fill="#A8E6CF" />
+  ${avatarUri ? `<image href="${avatarUri}" x="484" y="214" width="112" height="112" preserveAspectRatio="xMidYMid slice" clip-path="url(#avatarClip)" />` : ''}
 
-  <!-- Photo Box -->
-  <rect x="180" y="270" width="720" height="340" rx="24" fill="#1B2A4A" stroke="#A8E6CF" stroke-width="2" stroke-opacity="0.4" filter="url(#shadow)" />
-  ${b2bDataUri ? `<image href="${b2bDataUri}" x="180" y="270" width="720" height="340" preserveAspectRatio="xMidYMid slice" clip-path="url(#rectClip)" />` : ''}
+  <!-- Quote -->
+  <text x="540" y="420" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="normal" fill="#FFFFFF" text-anchor="middle" width="660">
+    <tspan x="540" dy="0">“${texto}”</tspan>
+  </text>
 
-  <!-- Benefits Row -->
-  <g transform="translate(140, 650)">
-    <g transform="translate(0, 0)">
-      <circle cx="20" cy="20" r="16" fill="#A8E6CF" fill-opacity="0.2" />
-      <text x="20" y="27" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#A8E6CF" text-anchor="middle">✓</text>
-      <text x="50" y="26" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="bold" fill="#FFFFFF">Preço Especial Atacado</text>
-    </g>
+  <!-- 5 Gold Stars -->
+  <text x="540" y="620" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#FFD166" letter-spacing="8" text-anchor="middle">★★★★★</text>
+</svg>`;
 
-    <g transform="translate(420, 0)">
-      <circle cx="20" cy="20" r="16" fill="#A8E6CF" fill-opacity="0.2" />
-      <text x="20" y="27" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#A8E6CF" text-anchor="middle">✓</text>
-      <text x="50" y="26" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="bold" fill="#FFFFFF">Reposição 2x por Semana</text>
-    </g>
+    const outPath = path.join(FOTOS_DIR, `post_depoimento_${Date.now()}.png`);
+    await sharp(BG_TEAL)
+      .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
+      .png()
+      .toFile(outPath);
 
-    <g transform="translate(200, 60)">
-      <circle cx="20" cy="20" r="16" fill="#A8E6CF" fill-opacity="0.2" />
-      <text x="20" y="27" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#A8E6CF" text-anchor="middle">✓</text>
-      <text x="50" y="26" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="bold" fill="#FFFFFF">Amostra Grátis de Degustação</text>
-    </g>
-  </g>
+    return outPath;
+  }
 
-  <!-- CTA Box Bottom -->
-  <rect x="240" y="780" width="600" height="66" rx="33" fill="#A8E6CF" />
-  <text x="540" y="822" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" fill="#062338" text-anchor="middle">SEJA UM PARCEIRO: (98) 99193-9476</text>
+  async renderizarPostB2B() {
+    const fotoB2BPath = path.join(FOTOS_DIR, 'parceiro-real.jpg');
+    const svgOverlay = `
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bottomFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#062338" stop-opacity="0" />
+      <stop offset="65%" stop-color="#062338" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#062338" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
 
-  <text x="540" y="890" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="bold" fill="rgba(255,255,255,0.7)" text-anchor="middle">Pote<tspan fill="#A8E6CF">Plutão</tspan> B2B • Jardim São Cristóvão e Região</text>
+  <rect x="0" y="780" width="1080" height="300" fill="url(#bottomFade)" />
+  <text x="540" y="930" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="bold" fill="#A8E6CF" text-anchor="middle" letter-spacing="3">PONTO DE REVENDA</text>
+  <text x="540" y="990" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="900" fill="#FFFFFF" text-anchor="middle">Pote<tspan fill="#A8E6CF">Plutão</tspan></text>
 </svg>`;
 
     const outPath = path.join(FOTOS_DIR, `post_b2b_${Date.now()}.png`);
-    await sharp(BG_TEAL)
-      .composite([{ input: Buffer.from(svg), top: 0, left: 0 }])
+    await sharp(fotoB2BPath)
+      .resize(1080, 1080, { fit: 'cover' })
+      .composite([{ input: Buffer.from(svgOverlay), top: 0, left: 0 }])
+      .png()
+      .toFile(outPath);
+
+    return outPath;
+  }
+
+  async renderizarPostTrio() {
+    const trioPath = path.join(FOTOS_DIR, 'potes-trio-real.jpg');
+    const svgOverlay = `
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bottomFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#062338" stop-opacity="0" />
+      <stop offset="65%" stop-color="#062338" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#062338" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="780" width="1080" height="300" fill="url(#bottomFade)" />
+  <text x="540" y="930" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="bold" fill="#A8E6CF" text-anchor="middle" letter-spacing="3">SABORES ARTESANAIS</text>
+  <text x="540" y="990" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="900" fill="#FFFFFF" text-anchor="middle">Pote<tspan fill="#A8E6CF">Plutão</tspan></text>
+</svg>`;
+
+    const outPath = path.join(FOTOS_DIR, `post_trio_${Date.now()}.png`);
+    await sharp(trioPath)
+      .resize(1080, 1080, { fit: 'cover' })
+      .composite([{ input: Buffer.from(svgOverlay), top: 0, left: 0 }])
       .png()
       .toFile(outPath);
 
