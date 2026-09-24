@@ -3,6 +3,7 @@
 // ============================================================
 
 require('dotenv').config();
+const fs = require('fs');
 
 process.on('unhandledRejection', (reason) => {
   console.error('[Sistema] Unhandled Rejection:', reason && reason.message ? reason.message : reason);
@@ -1012,7 +1013,14 @@ client.on('messageCreate', async (message) => {
       payload.files = [{ attachment: resultado.fotoPath, name: resultado.fotoNome }];
     }
 
-    return message.reply(payload);
+    try {
+      await message.reply(payload);
+    } finally {
+      if (resultado.fotoPath && fs.existsSync(resultado.fotoPath) && resultado.fotoNome && resultado.fotoNome.startsWith('post_')) {
+        try { fs.unlinkSync(resultado.fotoPath); } catch (_) {}
+      }
+    }
+    return;
   }
 
   // PROPOSTA B2B / PARCERIA PARA COMÉRCIOS
