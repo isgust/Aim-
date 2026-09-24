@@ -29,6 +29,7 @@ const SistemaDeMusica = require('./sistema/musica');
 const analytics = require('./sistema/analytics');
 const SistemaDeOpinioes = require('./sistema/opinioes');
 const SistemaSocial = require('./sistema/social');
+const SistemaPotePlutao = require('./sistema/poteplutao');
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
@@ -57,6 +58,7 @@ const aprendizado = new SistemaDeAprendizado(GEMINI_KEY);
 const loreEngine = new LoreEngine(mestre);
 const musica = new SistemaDeMusica(GEMINI_KEY);
 const opinioes = new SistemaDeOpinioes(GEMINI_KEY);
+const potePlutao = new SistemaPotePlutao(GEMINI_KEY);
 const executoresAime = {
   tocarMusica: async (guild, member, canalTexto, busca) => {
     if (!guild) return;
@@ -958,11 +960,65 @@ client.on('messageCreate', async (message) => {
                    `• \`!comandos\` → Lista novos comandos criados pela comunidade!\n\n` +
                    `**🛡️ ADMINISTRAÇÃO:**\n` +
                    `• \`!limpar <1-99>\` → Apaga mensagens do canal (moderadores)`,
-      color: 0x34495e,
-      footer: { text: `Bot Supremo • Administrador, Mestre de Jogo, DJ de Voz e Membro Vivo do Servidor` }
+      color: 0x2D8B7A,
+      footer: { text: `Aimê • Administradora, Mestre de RPG, DJ e Embaixadora PotePlutão 🪐` }
     };
 
     return message.reply({ embeds: [embedAjuda] });
+  }
+
+  // ==========================================================
+  // POTEPLUTÃO — CARDÁPIO, MARKETING INSTAGRAM & PARCERIAS
+  // ==========================================================
+
+  // CARDÁPIO DE SABORES
+  if (['sabores', 'cardapio', 'menu', 'saborespote'].includes(comando)) {
+    const embedCardapio = potePlutao.obterCardapioEmbed();
+    return message.reply({ embeds: [embedCardapio] });
+  }
+
+  // APRESENTAÇÃO GERAL POTEPLUTÃO
+  if (['pote', 'poteplutao', 'plutao'].includes(comando)) {
+    const embedPote = {
+      title: '🪐 Bem-vindo à PotePlutão • Cremes Gelados Artesanais',
+      description: 'A sobremesa mais gelada da galáxia, direto de **São Luís - MA**!\n\n' +
+                   'Receita autoral de cremes ultragelados a **-18°C**, super aerados e tão leves que parecem gravidade zero.\n\n' +
+                   '🍨 **Sabores Disponíveis (Pote 120ml por R$ 5,00):**\n' +
+                   '• 🟡 **Maracujá** — Refrescante com sementes e polpa natural\n' +
+                   '• 🟢 **Limão** — Cítrico com raspas frescas artesanais\n' +
+                   '• 🔴 **Morango** — Clássico aveludado com calda de frutas\n' +
+                   '• 🍫 **Chocolate** — Cacau 50% com granulado nobre crocante\n\n' +
+                   '📌 *Comandos rápidos:*\n' +
+                   '• `!sabores` → Cardápio completo com detalhes\n' +
+                   '• `!postar [sabor]` → Gerar post pro Instagram com foto\n' +
+                   '• `!parceria` → Preços de atacado para restaurantes e padarias\n\n' +
+                   '📲 **Peça pelo WhatsApp oficial:** `(98) 99193-9476`',
+      color: 0x2D8B7A,
+      footer: { text: 'PotePlutão • Zero Gravidade • Jardim São Cristóvão' }
+    };
+    return message.reply({ embeds: [embedPote] });
+  }
+
+  // GERAR E PUBLICAR POST DO INSTAGRAM
+  if (['postar', 'post', 'instagram', 'insta', 'postinsta'].includes(comando)) {
+    const termo = args.join(' ').trim();
+    await message.channel.sendTyping();
+
+    const usarIA = termo.includes('ia') || termo.includes('novo') || termo.includes('criativo');
+    const resultado = await potePlutao.gerarPost(termo, usarIA);
+
+    const payload = { embeds: [resultado.embed] };
+    if (resultado.fotoPath) {
+      payload.files = [{ attachment: resultado.fotoPath, name: resultado.fotoNome }];
+    }
+
+    return message.reply(payload);
+  }
+
+  // PROPOSTA B2B / PARCERIA PARA COMÉRCIOS
+  if (['parceria', 'atacado', 'revenda', 'comercio'].includes(comando)) {
+    const embedParceria = potePlutao.obterParceriaEmbed();
+    return message.reply({ embeds: [embedParceria] });
   }
 
   // ==========================================================
