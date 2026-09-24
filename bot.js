@@ -302,15 +302,58 @@ client.on('messageCreate', async (message) => {
   const canalNome = isDM ? 'dm-privada' : (message.channel.name ? message.channel.name.toLowerCase() : 'geral');
   const conteudo = message.content.trim();
 
-  // Se o usuário mandou mensagem no privado (DM) ou está em conversa ativa no canal do servidor:
-  if (isDM && !conteudo.startsWith(PREFIXO)) {
-    await social.responderConversa(message, { ativa: true, tipo: 'dm_privada' });
-    return;
-  }
-
   const emConversa = await social.estaEmConversaAtiva(message, client.user);
-  if (!conteudo.startsWith(PREFIXO) && emConversa && emConversa.ativa) {
-    await social.responderConversa(message, emConversa);
+  const estaFalandoComAime = isDM || (emConversa && emConversa.ativa);
+
+  // SE O USUÁRIO ESTIVER FALANDO COM A AIMÊ (DM OU MENÇÃO/NOME NO SERVIDOR)
+  if (estaFalandoComAime && !conteudo.startsWith(PREFIXO)) {
+    const textoSemAcento = conteudo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // 1. Pedido Natural de Post ou Arte para Instagram
+    const ehPedidoDePost = 
+      /(cria|criar|quero|faz|fazer|monta|montar|gera|gerar|bolar|faca|manda|mandar|posta|postar)\s+(um\s+|uma\s+)?(post|arte|publicacao|banner)/i.test(textoSemAcento) ||
+      /(post|arte|banner)\s+(de|do|da|sobre|pra|pro|com|desse|dessa)/i.test(textoSemAcento) ||
+      /(cria|faz|monta|gera)\s+(um|uma|algo)\s+(pro|pra|para|no)\s+insta/i.test(textoSemAcento);
+
+    if (ehPedidoDePost) {
+      await message.channel.sendTyping();
+
+      let tema = conteudo
+        .replace(/<@!?\d+>/g, '')
+        .replace(/(^|[^a-zA-Z0-9])aim[eê]([^a-zA-Z0-9]|$)/gi, ' ')
+        .replace(/^[\s,.:;!?\-]+/, '')
+        .replace(/^(por\s+favor|pfv|pode\s+(fazer|criar|montar)|consegue\s+(fazer|criar|montar)|quero|cria(r)?|faz(er)?|monta(r)?|gera(r)?|bolar|manda(r)?|posta(r)?)\s+/i, '')
+        .replace(/^(um\s+|uma\s+)?(post|arte|banner|publicacao)\s+(de|do|da|sobre|pra|pro|com|desse|dessa)\s+/i, '')
+        .replace(/^(um\s+|uma\s+)?(post|arte|banner|publicacao)\s+/i, '')
+        .trim();
+
+      const resultado = await potePlutao.gerarPost(tema || null, true);
+      const payload = {
+        content: `🪐 Claro! Montei esse post especialmente para você: ✨`,
+        embeds: [resultado.embed]
+      };
+      if (resultado.fotoPath) {
+        payload.files = [{ attachment: resultado.fotoPath, name: resultado.fotoNome }];
+      }
+
+      try {
+        await message.reply(payload);
+      } finally {
+        if (resultado.fotoPath && fs.existsSync(resultado.fotoPath) && resultado.fotoNome && resultado.fotoNome.startsWith('post_')) {
+          try { fs.unlinkSync(resultado.fotoPath); } catch (_) {}
+        }
+      }
+      return;
+    }
+
+    // 2. Pedido Natural de Cardápio
+    if (/(cardapio|sabores|tabela de precos|precos|tabela|sabores disponiveis)/i.test(textoSemAcento)) {
+      const embedCardapio = potePlutao.obterCardapioEmbed();
+      return message.reply({ content: '🪐 Aqui está o nosso cardápio oficial:', embeds: [embedCardapio] });
+    }
+
+    // 3. Conversa Social Padrão
+    await social.responderConversa(message, isDM ? { ativa: true, tipo: 'dm_privada' } : emConversa);
     return;
   }
 
